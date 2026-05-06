@@ -1,7 +1,30 @@
-﻿import Link from "next/link";
+﻿"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Logo from "@/components/Logo";
+import { createClient } from "@/lib/supabase";
 
 export default function EntrarPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(false);
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setErro("");
+    setCarregando(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    setCarregando(false);
+    if (error) {
+      setErro("Email ou senha incorretos.");
+    } else {
+      router.push("/painel");
+    }
+  }
   return (
     <div className="main-grid min-h-screen px-4 py-6 text-[#171222] sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-6xl">
@@ -54,7 +77,7 @@ export default function EntrarPage() {
               <h2 className="text-2xl font-extrabold">Entrar</h2>
               <p className="mt-1 text-sm text-[#5b4f73]">Use seu login para acessar o painel.</p>
 
-              <form className="mt-5 space-y-3">
+              <form className="mt-5 space-y-3" onSubmit={handleLogin}>
                 <label className="block text-sm font-semibold" htmlFor="email">
                   Email
                 </label>
@@ -62,7 +85,10 @@ export default function EntrarPage() {
                   id="email"
                   type="email"
                   placeholder="voce@exemplo.com"
-                  className="w-full rounded-xl border border-[#d7cdef] bg-white px-3 py-2.5 outline-none"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-[#e0e0e0] bg-white px-3 py-2.5 outline-none focus:border-[#6B21E8]"
                 />
 
                 <label className="block pt-1 text-sm font-semibold" htmlFor="senha">
@@ -72,20 +98,26 @@ export default function EntrarPage() {
                   id="senha"
                   type="password"
                   placeholder="********"
-                  className="w-full rounded-xl border border-[#d7cdef] bg-white px-3 py-2.5 outline-none"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  required
+                  className="w-full rounded-xl border border-[#e0e0e0] bg-white px-3 py-2.5 outline-none focus:border-[#6B21E8]"
                 />
 
-                <Link
-                  href="/painel"
-                  className="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-[#5E17EB] px-4 py-2.5 text-center font-bold text-white"
+                {erro && <p className="text-sm font-semibold text-red-600">{erro}</p>}
+
+                <button
+                  type="submit"
+                  disabled={carregando}
+                  className="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-[#6B21E8] px-4 py-2.5 text-center font-bold text-white disabled:opacity-60"
                 >
-                  Entrar no painel
-                </Link>
+                  {carregando ? "Entrando..." : "Entrar no painel"}
+                </button>
               </form>
 
-              <p className="mt-4 text-center text-sm text-[#5b4f73]">
+              <p className="mt-4 text-center text-sm text-[#666666]">
                 Ainda nao tem conta?{" "}
-                <Link href="/cadastro" className="font-bold text-[#1A0B33]">
+                <Link href="/cadastro" className="font-bold text-[#6B21E8]">
                   Criar agora
                 </Link>
               </p>

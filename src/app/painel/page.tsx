@@ -1,5 +1,9 @@
-﻿import Link from "next/link";
+﻿"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Logo from "@/components/Logo";
+import { createClient } from "@/lib/supabase";
 
 const resultados = [
   {
@@ -33,20 +37,49 @@ const resultados = [
 ];
 
 export default function PainelPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [verificando, setVerificando] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
+        router.replace("/entrar");
+      } else {
+        setEmail(data.session.user.email ?? "");
+        setVerificando(false);
+      }
+    });
+  }, [router]);
+
+  async function handleSair() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/");
+  }
+
+  if (verificando) {
+    return <div className="main-grid min-h-screen flex items-center justify-center text-[#666666]">Carregando...</div>;
+  }
+
   return (
-    <div className="main-grid min-h-screen px-4 py-6 text-[#171222] sm:px-6 lg:px-8">
+    <div className="main-grid min-h-screen px-4 py-6 text-[#111111] sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-6xl">
         <header className="top-nav mb-6 flex items-center justify-between rounded-2xl px-4 py-3">
           <Link href="/" className="block">
             <Logo size="sm" />
           </Link>
           <div className="flex items-center gap-2">
-<span className="rounded-full border border-[#d7cdef] bg-white px-3 py-1 text-xs font-semibold text-[#5b4f73]">
-              24 consultas restantes
+            <span className="hidden rounded-full border border-[#e0e0e0] bg-white px-3 py-1 text-xs font-semibold text-[#666666] sm:inline">
+              {email}
             </span>
-            <Link href="/" className="rounded-full bg-[#1A0B33] px-4 py-2 text-sm font-semibold text-white">
+            <button
+              onClick={handleSair}
+              className="rounded-full bg-[#6B21E8] px-4 py-2 text-sm font-semibold text-white"
+            >
               Sair
-            </Link>
+            </button>
           </div>
         </header>
 
@@ -55,12 +88,12 @@ export default function PainelPage() {
             <div className="glass-card rounded-3xl p-5 sm:p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold tracking-[0.14em] text-[#5b4f73]">
+                  <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">
                     BUSCA UNIFICADA
                   </p>
                   <h1 className="text-3xl font-extrabold">Consultar automovel</h1>
                 </div>
-                <span className="rounded-full bg-[#5E17EB] px-3 py-1 text-xs font-semibold text-white">
+                <span className="rounded-full bg-[#6B21E8] px-3 py-1 text-xs font-semibold text-white">
                   1 consulta por pesquisa
                 </span>
               </div>
@@ -72,11 +105,11 @@ export default function PainelPage() {
                 <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">
                   <input
                     id="busca"
-                    className="rounded-xl border border-[#d7cdef] bg-white px-3 py-2.5 outline-none"
+                    className="rounded-xl border border-[#e0e0e0] bg-white px-3 py-2.5 outline-none"
                     placeholder="Ex.: Corolla XEi 2021"
                     defaultValue="Corolla XEi 2021"
                   />
-                  <button className="rounded-xl bg-[#5E17EB] px-4 py-2.5 font-bold text-white">
+                  <button className="rounded-xl bg-[#6B21E8] px-4 py-2.5 font-bold text-white">
                     Buscar agora
                   </button>
                 </div>
@@ -86,15 +119,15 @@ export default function PainelPage() {
                 {resultados.map((item) => (
                   <article
                     key={`${item.modelo}-${item.leiloeiro}`}
-                    className="rounded-xl border border-[#d7cdef] bg-white px-4 py-3"
+                    className="rounded-xl border border-[#e0e0e0] bg-white px-4 py-3"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-sm font-bold">{item.modelo}</p>
-                      <span className="rounded-full bg-[#DCC6FF] px-2 py-0.5 text-xs font-semibold text-[#1A0B33]">
+                      <span className="rounded-full bg-[#ede8fb] px-2 py-0.5 text-xs font-semibold text-[#6B21E8]">
                         {item.atualizacao}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-[#5b4f73]">
+                    <p className="mt-1 text-xs text-[#666666]">
                       {item.leiloeiro} · {item.estado}
                     </p>
                     <p className="mt-2 text-sm font-semibold">Lance atual: {item.lance}</p>
@@ -106,20 +139,20 @@ export default function PainelPage() {
 
           <aside className="fade-up-delay space-y-3 lg:col-span-4">
             <div className="glass-card rounded-2xl p-4">
-              <p className="text-xs font-semibold tracking-[0.14em] text-[#5b4f73]">SEU PLANO</p>
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">SEU PLANO</p>
               <p className="mt-2 text-3xl font-extrabold">R$ 39,90</p>
-              <p className="text-sm text-[#5b4f73]">Ciclo atual com 25 consultas</p>
+              <p className="text-sm text-[#666666]">Ciclo atual com 25 consultas</p>
             </div>
 
             <div className="glass-card rounded-2xl p-4">
-              <p className="text-xs font-semibold tracking-[0.14em] text-[#5b4f73]">HISTORICO</p>
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">HISTORICO</p>
               <p className="mt-2 text-3xl font-extrabold">01</p>
-              <p className="text-sm text-[#5b4f73]">consulta usada hoje</p>
+              <p className="text-sm text-[#666666]">consulta usada hoje</p>
             </div>
 
             <div className="glass-card rounded-2xl p-4">
-              <p className="text-xs font-semibold tracking-[0.14em] text-[#5b4f73]">PROXIMA ETAPA</p>
-              <p className="mt-2 text-sm text-[#5b4f73]">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">PROXIMA ETAPA</p>
+              <p className="mt-2 text-sm text-[#666666]">
                 Integrar Mercado Pago para renovacao automatica e Supabase para salvar historico real
                 de consultas.
               </p>
