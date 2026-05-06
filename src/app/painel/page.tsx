@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -19,6 +19,18 @@ type Lote = {
 };
 
 const estados = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+
+function formatarMoeda(valor: number | string | null | undefined): string {
+  if (valor === null || valor === undefined) return "Sob consulta";
+  const num = typeof valor === "string" ? parseFloat(valor.replace(/[^0-9.-]/g, "")) : valor;
+  if (isNaN(num) || num === 0) return "Sob consulta";
+  return num.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+}
 
 export default function PainelPage() {
   const router = useRouter();
@@ -241,7 +253,7 @@ export default function PainelPage() {
                   <div className="mt-3 flex items-end justify-between">
                     <div>
                       <p className="text-xs text-[#666666]">Lance atual</p>
-                      <p className="text-lg font-extrabold">{item.lance_atual ?? "—"}</p>
+                      <p className="text-lg font-extrabold text-[#6B21E8]">{formatarMoeda(item.lance_atual)}</p>
                     </div>
                     {item.tipo && (
                       <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${item.tipo === "Judicial" ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"}`}>

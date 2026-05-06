@@ -54,6 +54,21 @@ async function scrapeMegaLeiloes() {
             data_encerramento = dataEl.attr("datetime") || dataEl.attr("data-encerramento") || null;
           }
 
+          const imageStyle = card.find("a.card-image").attr("style") || "";
+          const dataBg = card.find("a.card-image").attr("data-bg") || "";
+          let imagem = null;
+
+          const matchStyle = imageStyle.match(/url\(["']?([^"')]+)["']?\)/);
+          if (matchStyle && matchStyle[1]) {
+            imagem = matchStyle[1];
+          } else if (dataBg) {
+            imagem = dataBg;
+          }
+
+          if (imagem && (imagem.includes("card-no-image") || imagem.includes("no-image"))) {
+            imagem = null;
+          }
+
           lotes.push({
             modelo,
             leiloeiro: "Mega Leilões",
@@ -63,7 +78,7 @@ async function scrapeMegaLeiloes() {
             tipo,
             data_encerramento,
             link_original,
-            imagem: null,
+            imagem,
             fonte: "megaleiloes",
           });
         } catch (err) {
