@@ -9,6 +9,7 @@
 require("dotenv").config({ path: require("path").join(__dirname, "../.env.local") });
 const supabase = require("./supabase");
 const { scrapeMegaLeiloes } = require("./megaleiloes");
+const { scrapeSodreSantoro } = require("./sodresantoro");
 const { seedDados } = require("./seed");
 
 async function salvarLotesPorFonte(fonte, lotes) {
@@ -42,6 +43,15 @@ async function main() {
     totalLotes += lotes.length;
   } catch (e) {
     console.error("Erro no Mega Leiloes:", e.message);
+  }
+
+  // --- Sodre Santoro ---
+  try {
+    const lotes = await scrapeSodreSantoro();
+    await salvarLotesPorFonte("sodresantoro", lotes);
+    totalLotes += lotes.length;
+  } catch (e) {
+    console.error("Erro no Sodre Santoro:", e.message);
   }
 
   if (totalLotes === 0) {
