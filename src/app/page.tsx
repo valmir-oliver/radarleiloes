@@ -30,16 +30,16 @@ const faqs = [
 
 export default function Home() {
   return (
-    <div className="main-grid min-h-screen text-[#f0e8ff]">
+    <div className="main-grid min-h-screen text-[#111111]">
       {/* HEADER */}
       <header className="mx-auto w-full max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
         <div className="top-nav flex items-center justify-between rounded-2xl px-4 py-3">
           <Logo size="sm" />
           <div className="hidden gap-2 sm:flex">
-            <Link href="/entrar" className="rounded-full border border-[#2c1f4a] px-4 py-2 text-sm font-semibold">
+            <Link href="/entrar" className="rounded-full border border-[#e0e0e0] px-4 py-2 text-sm font-semibold">
               Entrar
             </Link>
-            <Link href="/cadastro" className="rounded-full bg-[#5E17EB] px-4 py-2 text-sm font-semibold text-white">
+            <Link href="/cadastro" className="rounded-full bg-[#6B21E8] px-4 py-2 text-sm font-semibold text-white">
               Comecar agora
             </Link>
           </div>
@@ -51,28 +51,28 @@ export default function Home() {
         {/* HERO */}
         <div className="grid gap-8 lg:grid-cols-12">
           <section className="fade-up lg:col-span-7">
-            <p className="mb-4 inline-flex items-center rounded-full border border-[#2c1f4a] bg-[#110d20] px-3 py-1 text-xs font-semibold tracking-[0.16em] text-[#9b88be]">
+            <p className="mb-4 inline-flex items-center rounded-full border border-[#e0e0e0] bg-white px-3 py-1 text-xs font-semibold tracking-[0.16em] text-[#666666]">
               +25 PLATAFORMAS DE LEILAO MONITORADAS
             </p>
             <h1 className="hero-title text-[3.4rem] sm:text-[4.8rem]">
               ENQUANTO OUTROS PROCURAM,
-              <span className="block text-[#5E17EB]">VOCE JA ENCONTROU.</span>
+              <span className="block text-[#6B21E8]">VOCE JA ENCONTROU.</span>
             </h1>
-            <p className="mt-4 max-w-xl text-lg text-[#9b88be]">
+            <p className="mt-4 max-w-xl text-lg text-[#666666]">
               O Radar varre mais de 15 plataformas de leilao ao mesmo tempo. Voce digita o modelo,
               nos localizamos o lance. Rapido, simples e sem perder tempo em dezenas de sites.
             </p>
 
             <div className="mt-7 grid gap-3 sm:grid-cols-2">
               <div className="glass-card rounded-2xl p-4">
-                <p className="text-xs font-semibold tracking-[0.14em] text-[#9b88be]">LEILOES</p>
+                <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">LEILOES</p>
                 <p className="mt-2 text-3xl font-extrabold">+10 mil</p>
-                <p className="text-sm text-[#9b88be]">lotes monitorados</p>
+                <p className="text-sm text-[#666666]">lotes monitorados</p>
               </div>
               <div className="glass-card rounded-2xl p-4">
-                <p className="text-xs font-semibold tracking-[0.14em] text-[#9b88be]">RESPOSTA</p>
+                <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">RESPOSTA</p>
                 <p className="mt-2 text-3xl font-extrabold">Rapida</p>
-                <p className="text-sm text-[#9b88be]">busca em segundos</p>
+                <p className="text-sm text-[#666666]">busca em segundos</p>
               </div>
             </div>
 
@@ -83,10 +83,10 @@ export default function Home() {
             </div>
 
             <div className="mt-7 flex flex-wrap gap-3">
-              <Link href="/cadastro" className="inline-flex items-center justify-center rounded-xl bg-[#5E17EB] px-6 py-3 text-sm font-bold text-white">
+              <Link href="/cadastro" className="inline-flex items-center justify-center rounded-xl bg-[#6B21E8] px-6 py-3 text-sm font-bold text-white">
                 Comecar agora
               </Link>
-              <Link href="/painel" className="inline-flex items-center justify-center rounded-xl border border-[#2c1f4a] bg-[#110d20] px-6 py-3 text-sm font-bold text-[#f0e8ff]">
+              <Link href="/painel" className="inline-flex items-center justify-center rounded-xl border border-[#e0e0e0] bg-white px-6 py-3 text-sm font-bold text-[#111111]">
                 Ver demonstracao
               </Link>
             </div>
@@ -97,7 +97,7 @@ export default function Home() {
             <div className="glass-card rounded-3xl p-5 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs font-semibold tracking-[0.14em] text-[#9b88be]">PAINEL DO CLIENTE</p>
+                  <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">PAINEL DO CLIENTE</p>
                   <h2 className="text-2xl font-extrabold">Buscar automovel</h2>
                 </div>
 
@@ -105,22 +105,22 @@ export default function Home() {
               <div className="search-mock mt-5 rounded-2xl p-4">
                 <label className="text-sm font-semibold">O que voce procura?</label>
                 <input
-                  className="mt-2 w-full rounded-xl border border-[#2c1f4a] bg-[#110d20] px-3 py-2 outline-none"
+                  className="mt-2 w-full rounded-xl border border-[#e0e0e0] bg-white px-3 py-2 outline-none"
                   placeholder="Ex.: Corolla XEi 2021"
                   readOnly
                 />
-                <button className="mt-3 w-full rounded-xl bg-[#5E17EB] px-4 py-2.5 font-bold text-white">
+                <button className="mt-3 w-full rounded-xl bg-[#6B21E8] px-4 py-2.5 font-bold text-white">
                   Buscar agora
                 </button>
               </div>
               <div className="mt-4 space-y-2">
                 {destaques.slice(0, 3).map((item) => (
-                  <article key={item.model} className="rounded-xl border border-[#2c1f4a] bg-[#110d20] px-3 py-3">
+                  <article key={item.model} className="rounded-xl border border-[#e0e0e0] bg-white px-3 py-3">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-bold">{item.model}</p>
-                      <span className="rounded-full bg-[#3d1a8a] px-2 py-0.5 text-xs font-semibold text-[#d4b8ff]">Ativo</span>
+                      <span className="rounded-full bg-[#ede8fb] px-2 py-0.5 text-xs font-semibold text-[#6B21E8]">Ativo</span>
                     </div>
-                    <p className="mt-1 text-xs text-[#9b88be]">{item.source} - {item.state} - {item.lance}</p>
+                    <p className="mt-1 text-xs text-[#666666]">{item.source} - {item.state} - {item.lance}</p>
                   </article>
                 ))}
               </div>
@@ -132,10 +132,10 @@ export default function Home() {
         <section className="mt-16">
           <div className="mb-6 flex items-end justify-between">
             <div>
-              <p className="text-xs font-semibold tracking-[0.14em] text-[#9b88be]">OPORTUNIDADES RECENTES</p>
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">OPORTUNIDADES RECENTES</p>
               <h2 className="text-3xl font-extrabold">Leiloes em destaque</h2>
             </div>
-            <Link href="/cadastro" className="hidden rounded-xl border border-[#2c1f4a] bg-[#110d20] px-4 py-2 text-sm font-semibold sm:block">
+            <Link href="/cadastro" className="hidden rounded-xl border border-[#e0e0e0] bg-white px-4 py-2 text-sm font-semibold sm:block">
               Ver todos
             </Link>
           </div>
@@ -144,11 +144,11 @@ export default function Home() {
               <article key={item.model + item.source} className="glass-card rounded-2xl p-4">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-sm font-bold leading-snug">{item.model}</p>
-                  <span className="shrink-0 rounded-full border border-[#2c1f4a] px-2 py-0.5 text-xs text-[#9b88be]">{item.tipo}</span>
+                  <span className="shrink-0 rounded-full border border-[#e0e0e0] px-2 py-0.5 text-xs text-[#666666]">{item.tipo}</span>
                 </div>
-                <p className="mt-2 text-xs text-[#9b88be]">{item.source} - {item.state}</p>
+                <p className="mt-2 text-xs text-[#666666]">{item.source} - {item.state}</p>
                 <p className="mt-3 text-lg font-extrabold">{item.lance}</p>
-                <Link href="/cadastro" className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-[#5E17EB] py-2 text-xs font-bold text-white">
+                <Link href="/cadastro" className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-[#6B21E8] py-2 text-xs font-bold text-white">
                   Quero este carro
                 </Link>
               </article>
@@ -158,14 +158,14 @@ export default function Home() {
 
         {/* COMO FUNCIONA */}
         <section className="mt-16">
-          <p className="text-xs font-semibold tracking-[0.14em] text-[#9b88be]">SIMPLES E RAPIDO</p>
+          <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">SIMPLES E RAPIDO</p>
           <h2 className="mt-1 text-3xl font-extrabold">Como funciona</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {passos.map((p) => (
               <article key={p.num} className="glass-card rounded-2xl p-4">
-                <p className="hero-title text-5xl text-[#5E17EB]">{p.num}</p>
+                <p className="hero-title text-5xl text-[#6B21E8]">{p.num}</p>
                 <h3 className="mt-2 text-lg font-extrabold">{p.titulo}</h3>
-                <p className="mt-1 text-sm text-[#9b88be]">{p.desc}</p>
+                <p className="mt-1 text-sm text-[#666666]">{p.desc}</p>
               </article>
             ))}
           </div>
@@ -174,16 +174,16 @@ export default function Home() {
         {/* CTA CENTRAL */}
         <section className="mt-16">
           <div className="glass-card rounded-3xl p-8 text-center sm:p-12">
-            <p className="text-xs font-semibold tracking-[0.14em] text-[#9b88be]">COMECE HOJE</p>
+            <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">COMECE HOJE</p>
             <h2 className="hero-title mt-2 text-[2.8rem] sm:text-[3.8rem]">
               ARREMATE O CARRO CERTO
-              <span className="block text-[#5E17EB]">PELO MENOR LANCE</span>
+              <span className="block text-[#6B21E8]">PELO MENOR LANCE</span>
             </h2>
-            <p className="mx-auto mt-4 max-w-lg text-lg text-[#9b88be]">
+            <p className="mx-auto mt-4 max-w-lg text-lg text-[#666666]">
               Navegue entre mais de 10 mil leiloes ativos e encontre a oportunidade perfeita
               sem precisar visitar dezenas de sites.
             </p>
-            <Link href="/cadastro" className="mt-7 inline-flex items-center justify-center rounded-xl bg-[#5E17EB] px-8 py-4 text-base font-bold text-white">
+            <Link href="/cadastro" className="mt-7 inline-flex items-center justify-center rounded-xl bg-[#6B21E8] px-8 py-4 text-base font-bold text-white">
               Comecar agora
             </Link>
           </div>
@@ -191,13 +191,13 @@ export default function Home() {
 
         {/* FAQ */}
         <section className="mt-16">
-          <p className="text-xs font-semibold tracking-[0.14em] text-[#9b88be]">DUVIDAS FREQUENTES</p>
+          <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">DUVIDAS FREQUENTES</p>
           <h2 className="mt-1 text-3xl font-extrabold">Perguntas frequentes</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {faqs.map((faq) => (
               <article key={faq.q} className="glass-card rounded-2xl p-4">
                 <h3 className="text-sm font-bold">{faq.q}</h3>
-                <p className="mt-2 text-sm text-[#9b88be]">{faq.r}</p>
+                <p className="mt-2 text-sm text-[#666666]">{faq.r}</p>
               </article>
             ))}
           </div>
@@ -205,34 +205,34 @@ export default function Home() {
       </main>
 
       {/* FOOTER */}
-      <footer className="mt-12 border-t border-[#2c1f4a] bg-[#06040e]">
+      <footer className="mt-12 border-t border-[#e0e0e0] bg-[#f0f0f0]">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
           <div className="grid gap-8 sm:grid-cols-3">
             <div>
               <Logo size="sm" />
-              <p className="mt-3 text-sm text-[#9b88be]">
+              <p className="mt-3 text-sm text-[#666666]">
                 Simplificamos sua busca pelo leilao perfeito. Reunimos leiloes de automoveis
                 de diversas plataformas em um so painel. Busca facil, arremate rapido.
               </p>
             </div>
             <div>
-              <p className="text-xs font-semibold tracking-[0.14em] text-[#9b88be]">PLATAFORMA</p>
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">PLATAFORMA</p>
               <ul className="mt-3 space-y-2 text-sm">
-                <li><Link href="/cadastro" className="hover:text-[#5E17EB]">Criar conta</Link></li>
-                <li><Link href="/entrar" className="hover:text-[#5E17EB]">Entrar</Link></li>
-                <li><Link href="/painel" className="hover:text-[#5E17EB]">Demo do painel</Link></li>
+                <li><Link href="/cadastro" className="hover:text-[#6B21E8]">Criar conta</Link></li>
+                <li><Link href="/entrar" className="hover:text-[#6B21E8]">Entrar</Link></li>
+                <li><Link href="/painel" className="hover:text-[#6B21E8]">Demo do painel</Link></li>
               </ul>
             </div>
             <div>
-              <p className="text-xs font-semibold tracking-[0.14em] text-[#9b88be]">LEGAL</p>
+              <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">LEGAL</p>
               <ul className="mt-3 space-y-2 text-sm">
-                <li><Link href="#" className="hover:text-[#5E17EB]">Politica de privacidade</Link></li>
-                <li><Link href="#" className="hover:text-[#5E17EB]">Termos de uso</Link></li>
-                <li><Link href="#" className="hover:text-[#5E17EB]">Central de ajuda</Link></li>
+                <li><Link href="#" className="hover:text-[#6B21E8]">Politica de privacidade</Link></li>
+                <li><Link href="#" className="hover:text-[#6B21E8]">Termos de uso</Link></li>
+                <li><Link href="#" className="hover:text-[#6B21E8]">Central de ajuda</Link></li>
               </ul>
             </div>
           </div>
-          <p className="mt-8 border-t border-[#2c1f4a] pt-6 text-center text-xs text-[#9b88be]">
+          <p className="mt-8 border-t border-[#e0e0e0] pt-6 text-center text-xs text-[#666666]">
             2026 Radar Leiloes Auto - O arremate e realizado diretamente na plataforma do leiloeiro.
             O Radar nao se responsabiliza por transacoes comerciais realizadas nos sites de leilao.
           </p>
@@ -241,4 +241,5 @@ export default function Home() {
     </div>
   );
 }
+
 
