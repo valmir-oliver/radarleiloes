@@ -8,8 +8,17 @@
 
 require("dotenv").config({ path: require("path").join(__dirname, "../.env.local") });
 const supabase = require("./supabase");
-const { scrapeSODRE } = require("./sodresantoro");
+const { scrapeMegaLeiloes } = require("./megaleiloes");
 const { seedDados } = require("./seed");
+
+async function salvarLotesPorFonte(fonte, lotes) {
+  if (lotes.length === 0) return;
+  // Remove lotes antigos da mesma fonte e insere os novos
+  await supabase.from("lotes").delete().eq("fonte", fonte);
+  const { error } = await supabase.from("lotes").insert(lotes);
+  if (error) console.error(`  Erro ao salvar [${fonte}]:`, error.message);
+  else console.log(`  ✓ ${lotes.length} lotes salvos [${fonte}]`);
+}
 
 async function main() {
   console.log("=== RADAR LEILOES - Scraper iniciado ===");
@@ -24,26 +33,22 @@ async function main() {
   }
   console.log("✓ Supabase conectado\n");
 
-  const todosLotes = [];
+  let totalLotes = 0;
 
-  // --- Sodre Santoro ---
+  // --- Mega Leiloes ---
   try {
-    const lotes = await scrapeSODRE();
-    todosLotes.push(...lotes);
+    const lotes = await scrapeMegaLeiloes();
+    await salvarLotesPorFonte("megaleiloes", lotes);
+    totalLotes += lotes.length;
   } catch (e) {
-    console.error("Erro no Sodre Santoro:", e.message);
+    console.error("Erro no Mega Leiloes:", e.message);
   }
 
-  // Salva tudo no banco
-  if (todosLotes.length > 0) {
-    const { error } = await supabase.from("lotes").upsert(todosLotes, {
-      ignoreDuplicates: false,
-    });
-    if (error) console.error("Erro ao salvar lotes:", error.message);
-    else console.log(`\n✓ ${todosLotes.length} lotes salvos no Supabase`);
-  } else {
+  if (totalLotes === 0) {
     console.log("\nNenhum lote coletado. Rodando seed de dados de exemplo...");
     await seedDados();
+  } else {
+    console.log(`\n✓ Total: ${totalLotes} lotes coletados e salvos`);
   }
 
   console.log("\n=== Scraping concluido ===");
