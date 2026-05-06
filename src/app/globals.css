@@ -1,13 +1,13 @@
 ﻿@import "tailwindcss";
 
 :root {
-  --background: #ece6fb;
-  --foreground: #150f24;
-  --ink-soft: #4d4366;
-  --card: #f7f1ff;
-  --line: #cabde6;
-  --accent: #5E17EB;
-  --accent-2: #1A0B33;
+  --background: #08060f;
+  --foreground: #f0e8ff;
+  --ink-soft: #9b88be;
+  --card: #110d20;
+  --line: #2c1f4a;
+  --accent: #8B2FFF;
+  --accent-2: #e8d5ff;
 }
 
 @theme inline {
@@ -24,15 +24,15 @@ body {
 
 .main-grid {
   background:
-    radial-gradient(circle at 10% 8%, #b98dff 0, transparent 42%),
-    radial-gradient(circle at 92% 2%, #7e42e5 0, transparent 34%),
-    linear-gradient(180deg, #f2e8ff 0%, #e4d6ff 62%, #ddd0ff 100%);
+    radial-gradient(circle at 8% 12%, rgba(120, 40, 255, 0.45) 0, transparent 38%),
+    radial-gradient(circle at 90% 5%, rgba(90, 15, 210, 0.35) 0, transparent 32%),
+    linear-gradient(180deg, #100820 0%, #08060f 55%, #050310 100%);
 }
 
 .top-nav {
-  border: 1px solid var(--line);
-  background: rgba(245, 236, 255, 0.78);
-  backdrop-filter: blur(8px);
+  border: 1px solid rgba(120, 60, 255, 0.25);
+  background: rgba(8, 6, 15, 0.88);
+  backdrop-filter: blur(12px);
 }
 
 .hero-title {
@@ -42,19 +42,20 @@ body {
 }
 
 .glass-card {
-  border: 1px solid var(--line);
-  background: linear-gradient(140deg, #fdfaff, #efe0ff);
-  box-shadow: 0 24px 52px rgba(52, 14, 112, 0.15);
+  border: 1px solid rgba(120, 60, 255, 0.22);
+  background: linear-gradient(140deg, rgba(22, 14, 42, 0.92), rgba(12, 8, 26, 0.96));
+  box-shadow: 0 24px 52px rgba(80, 10, 180, 0.28);
 }
 
 .search-mock {
-  border: 1px dashed #c8b6df;
-  background: #fbf6ff;
+  border: 1px dashed rgba(120, 60, 255, 0.4);
+  background: rgba(10, 7, 20, 0.8);
 }
 
 .pill {
-  border: 1px solid #d8c9ea;
-  background: #fff;
+  border: 1px solid rgba(120, 60, 255, 0.35);
+  background: rgba(20, 12, 40, 0.75);
+  color: #c4a8f0;
 }
 
 .fade-up {
