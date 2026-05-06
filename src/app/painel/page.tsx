@@ -5,41 +5,27 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import { createClient } from "@/lib/supabase";
 
-const resultados = [
-  {
-    modelo: "Toyota Corolla XEi 2021",
-    leiloeiro: "Copart",
-    estado: "SP",
-    lance: "R$ 48.200",
-    atualizacao: "ha 3 min",
-  },
-  {
-    modelo: "Honda Civic EXL 2020",
-    leiloeiro: "VIP Leiloes",
-    estado: "PR",
-    lance: "R$ 44.900",
-    atualizacao: "ha 7 min",
-  },
-  {
-    modelo: "Onix LT 1.0 Turbo 2022",
-    leiloeiro: "Sodre Santoro",
-    estado: "MG",
-    lance: "R$ 39.100",
-    atualizacao: "ha 12 min",
-  },
-  {
-    modelo: "HB20 Vision 2021",
-    leiloeiro: "Superbid",
-    estado: "GO",
-    lance: "R$ 33.700",
-    atualizacao: "ha 18 min",
-  },
+const lotes = [
+  { id: 1, modelo: "Toyota Corolla XEi 2021", leiloeiro: "Copart", estado: "SP", cidade: "Sao Paulo", lance: "R$ 48.200", tipo: "Judicial", encerra: "08 Jun", encerraHoje: false },
+  { id: 2, modelo: "Honda Civic EXL 2020", leiloeiro: "VIP Leiloes", estado: "PR", cidade: "Curitiba", lance: "R$ 44.900", tipo: "Extrajudicial", encerra: "Encerra Hoje", encerraHoje: true },
+  { id: 3, modelo: "Onix LT 1.0 Turbo 2022", leiloeiro: "Sodre Santoro", estado: "MG", cidade: "Belo Horizonte", lance: "R$ 39.100", tipo: "Extrajudicial", encerra: "10 Jun", encerraHoje: false },
+  { id: 4, modelo: "HB20 Vision 1.0 2021", leiloeiro: "Superbid", estado: "GO", cidade: "Goiania", lance: "R$ 33.700", tipo: "Judicial", encerra: "Encerra Hoje", encerraHoje: true },
+  { id: 5, modelo: "Jeep Renegade Sport 2022", leiloeiro: "MGL Leiloes", estado: "RJ", cidade: "Rio de Janeiro", lance: "R$ 67.400", tipo: "Judicial", encerra: "12 Jun", encerraHoje: false },
+  { id: 6, modelo: "Fiat Strada Freedom 2023", leiloeiro: "Milan Leiloes", estado: "RS", cidade: "Porto Alegre", lance: "R$ 58.800", tipo: "Extrajudicial", encerra: "07 Jun", encerraHoje: false },
+  { id: 7, modelo: "Volkswagen Polo Highline 2022", leiloeiro: "Zukerman", estado: "SP", cidade: "Campinas", lance: "R$ 41.500", tipo: "Extrajudicial", encerra: "Encerra Hoje", encerraHoje: true },
+  { id: 8, modelo: "Chevrolet Tracker LTZ 2021", leiloeiro: "Freitas Leiloes", estado: "BA", cidade: "Salvador", lance: "R$ 72.300", tipo: "Judicial", encerra: "15 Jun", encerraHoje: false },
 ];
+
+const estados = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
 export default function PainelPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [verificando, setVerificando] = useState(true);
+  const [busca, setBusca] = useState("");
+  const [estado, setEstado] = useState("");
+  const [tipo, setTipo] = useState("");
+  const [sidebarAberta, setSidebarAberta] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -59,105 +45,201 @@ export default function PainelPage() {
     router.push("/");
   }
 
+  const resultados = lotes.filter((l) => {
+    const okBusca = busca === "" || l.modelo.toLowerCase().includes(busca.toLowerCase()) || l.leiloeiro.toLowerCase().includes(busca.toLowerCase());
+    const okEstado = estado === "" || l.estado === estado;
+    const okTipo = tipo === "" || l.tipo === tipo;
+    return okBusca && okEstado && okTipo;
+  });
+
   if (verificando) {
-    return <div className="main-grid min-h-screen flex items-center justify-center text-[#666666]">Carregando...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f5f5] text-[#666666]">
+        Carregando...
+      </div>
+    );
   }
 
   return (
-    <div className="main-grid min-h-screen px-4 py-6 text-[#111111] sm:px-6 lg:px-8">
-      <div className="mx-auto w-full max-w-6xl">
-        <header className="top-nav mb-6 flex items-center justify-between rounded-2xl px-4 py-3">
+    <div className="min-h-screen bg-[#f5f5f5] text-[#111111]">
+      {/* HEADER */}
+      <header className="sticky top-0 z-30 border-b border-[#e0e0e0] bg-white px-4 py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <Link href="/" className="block">
             <Logo size="sm" />
           </Link>
           <div className="flex items-center gap-2">
-            <span className="hidden rounded-full border border-[#e0e0e0] bg-white px-3 py-1 text-xs font-semibold text-[#666666] sm:inline">
+            <span className="hidden rounded-full border border-[#e0e0e0] bg-[#f5f5f5] px-3 py-1 text-xs font-semibold text-[#666666] sm:inline">
               {email}
             </span>
             <button
               onClick={handleSair}
-              className="rounded-full bg-[#6B21E8] px-4 py-2 text-sm font-semibold text-white"
+              className="rounded-full border border-[#e0e0e0] bg-white px-4 py-1.5 text-sm font-semibold text-[#111111] hover:bg-[#f5f5f5]"
             >
               Sair
             </button>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <main className="grid gap-6 lg:grid-cols-12">
-          <section className="fade-up lg:col-span-8">
-            <div className="glass-card rounded-3xl p-5 sm:p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">
-                    BUSCA UNIFICADA
-                  </p>
-                  <h1 className="text-3xl font-extrabold">Consultar automovel</h1>
-                </div>
-                <span className="rounded-full bg-[#6B21E8] px-3 py-1 text-xs font-semibold text-white">
-                  1 consulta por pesquisa
-                </span>
-              </div>
+      <div className="mx-auto flex max-w-7xl">
+        {/* SIDEBAR */}
+        <aside className={`${sidebarAberta ? "translate-x-0" : "-translate-x-full"} fixed inset-y-0 left-0 z-20 w-72 overflow-y-auto border-r border-[#e0e0e0] bg-white pt-20 transition-transform lg:static lg:translate-x-0 lg:block lg:w-64 lg:shrink-0 lg:pt-6 xl:w-72`}>
+          <div className="px-4 pb-10">
+            <p className="mb-4 flex items-center gap-1 text-xs font-bold tracking-[0.12em] text-[#111111]">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M7 8h10M11 12h2M9 16h6" /></svg>
+              FILTROS
+            </p>
 
-              <div className="search-mock mt-5 rounded-2xl p-4">
-                <label className="text-sm font-semibold" htmlFor="busca">
-                  Modelo, versao ou palavra-chave
-                </label>
-                <div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]">
-                  <input
-                    id="busca"
-                    className="rounded-xl border border-[#e0e0e0] bg-white px-3 py-2.5 outline-none"
-                    placeholder="Ex.: Corolla XEi 2021"
-                    defaultValue="Corolla XEi 2021"
-                  />
-                  <button className="rounded-xl bg-[#6B21E8] px-4 py-2.5 font-bold text-white">
-                    Buscar agora
-                  </button>
-                </div>
-              </div>
+            {/* tipo tabs */}
+            <div className="mb-4 flex gap-1 rounded-xl border border-[#e0e0e0] bg-[#f5f5f5] p-1">
+              {["Todos", "Judicial", "Extrajudicial"].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => setTipo(t === "Todos" ? "" : t)}
+                  className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
+                    (t === "Todos" && tipo === "") || tipo === t
+                      ? "bg-white text-[#6B21E8] shadow-sm"
+                      : "text-[#666666] hover:text-[#111111]"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
 
-              <div className="mt-5 space-y-2">
-                {resultados.map((item) => (
-                  <article
-                    key={`${item.modelo}-${item.leiloeiro}`}
-                    className="rounded-xl border border-[#e0e0e0] bg-white px-4 py-3"
-                  >
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-bold">{item.modelo}</p>
-                      <span className="rounded-full bg-[#ede8fb] px-2 py-0.5 text-xs font-semibold text-[#6B21E8]">
-                        {item.atualizacao}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-[#666666]">
-                      {item.leiloeiro} · {item.estado}
-                    </p>
-                    <p className="mt-2 text-sm font-semibold">Lance atual: {item.lance}</p>
-                  </article>
+            {/* busca */}
+            <div className="mb-3">
+              <label className="mb-1 block text-xs font-semibold text-[#111111]">Busca</label>
+              <input
+                type="text"
+                placeholder="Modelo, marca ou leiloeiro"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="w-full rounded-xl border border-[#e0e0e0] bg-[#f9f9f9] px-3 py-2 text-sm outline-none focus:border-[#6B21E8]"
+              />
+            </div>
+
+            {/* estado */}
+            <div className="mb-3">
+              <label className="mb-1 block text-xs font-semibold text-[#111111]">Estado (UF)</label>
+              <select
+                value={estado}
+                onChange={(e) => setEstado(e.target.value)}
+                className="w-full rounded-xl border border-[#e0e0e0] bg-[#f9f9f9] px-3 py-2 text-sm outline-none focus:border-[#6B21E8]"
+              >
+                <option value="">Todos os estados</option>
+                {estados.map((uf) => (
+                  <option key={uf} value={uf}>{uf}</option>
                 ))}
-              </div>
-            </div>
-          </section>
-
-          <aside className="fade-up-delay space-y-3 lg:col-span-4">
-            <div className="glass-card rounded-2xl p-4">
-              <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">SEU PLANO</p>
-              <p className="mt-2 text-3xl font-extrabold">R$ 39,90</p>
-              <p className="text-sm text-[#666666]">Ciclo atual com 25 consultas</p>
+              </select>
             </div>
 
-            <div className="glass-card rounded-2xl p-4">
-              <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">HISTORICO</p>
-              <p className="mt-2 text-3xl font-extrabold">01</p>
-              <p className="text-sm text-[#666666]">consulta usada hoje</p>
+            {/* leiloeiro */}
+            <div className="mb-3">
+              <label className="mb-1 block text-xs font-semibold text-[#111111]">Leiloeiro</label>
+              <select className="w-full rounded-xl border border-[#e0e0e0] bg-[#f9f9f9] px-3 py-2 text-sm outline-none focus:border-[#6B21E8]">
+                <option value="">Todos</option>
+                {["Copart","VIP Leiloes","Sodre Santoro","Superbid","MGL Leiloes","Milan Leiloes","Freitas Leiloes","Zukerman"].map((l) => (
+                  <option key={l}>{l}</option>
+                ))}
+              </select>
             </div>
 
-            <div className="glass-card rounded-2xl p-4">
-              <p className="text-xs font-semibold tracking-[0.14em] text-[#666666]">PROXIMA ETAPA</p>
-              <p className="mt-2 text-sm text-[#666666]">
-                Integrar Mercado Pago para renovacao automatica e Supabase para salvar historico real
-                de consultas.
-              </p>
+            <button
+              onClick={() => { setBusca(""); setEstado(""); setTipo(""); }}
+              className="mt-2 w-full rounded-xl border border-[#e0e0e0] py-2 text-xs font-semibold text-[#666666] hover:bg-[#f5f5f5]"
+            >
+              Limpar filtros
+            </button>
+          </div>
+        </aside>
+
+        {/* overlay mobile */}
+        {sidebarAberta && (
+          <div className="fixed inset-0 z-10 bg-black/30 lg:hidden" onClick={() => setSidebarAberta(false)} />
+        )}
+
+        {/* CONTEUDO PRINCIPAL */}
+        <main className="flex-1 p-4 sm:p-6">
+          {/* barra superior */}
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                className="rounded-xl border border-[#e0e0e0] bg-white p-2 lg:hidden"
+                onClick={() => setSidebarAberta(true)}
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M7 8h10M11 12h2" /></svg>
+              </button>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#6B21E8] px-3 py-1 text-xs font-bold text-white">
+                {resultados.length} lotes
+              </span>
+              <span className="text-sm text-[#666666]">encontrados</span>
             </div>
-          </aside>
+            <select className="rounded-xl border border-[#e0e0e0] bg-white px-3 py-2 text-xs font-semibold text-[#111111] outline-none">
+              <option>Preco: Menor</option>
+              <option>Preco: Maior</option>
+              <option>Mais recente</option>
+            </select>
+          </div>
+
+          {/* grid de cards */}
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {resultados.map((item) => (
+              <article key={item.id} className="overflow-hidden rounded-2xl border border-[#e0e0e0] bg-white shadow-sm transition-shadow hover:shadow-md">
+                {/* imagem placeholder */}
+                <div className="relative flex h-40 items-center justify-center bg-[#f0f0f0]">
+                  <svg className="h-16 w-16 text-[#cccccc]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>
+                  {item.encerraHoje && (
+                    <span className="absolute left-2 top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                      Encerra Hoje
+                    </span>
+                  )}
+                  {!item.encerraHoje && (
+                    <span className="absolute right-2 top-2 rounded-full border border-[#e0e0e0] bg-white px-2 py-0.5 text-xs font-semibold text-[#666666]">
+                      {item.encerra}
+                    </span>
+                  )}
+                </div>
+
+                <div className="p-4">
+                  <p className="text-sm font-bold leading-snug">{item.modelo}</p>
+                  <p className="mt-1 flex items-center gap-1 text-xs text-[#666666]">
+                    <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                    {item.cidade} - {item.estado}
+                  </p>
+
+                  <div className="mt-3 flex items-end justify-between">
+                    <div>
+                      <p className="text-xs text-[#666666]">Lance atual</p>
+                      <p className="text-lg font-extrabold">{item.lance}</p>
+                    </div>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${item.tipo === "Judicial" ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"}`}>
+                      {item.tipo}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between gap-2">
+                    <span className="text-xs text-[#666666]">{item.leiloeiro}</span>
+                    <a
+                      href="#"
+                      className="inline-flex items-center gap-1 rounded-xl bg-[#6B21E8] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#5a18c7]"
+                    >
+                      Ver leilao
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
+                    </a>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          {resultados.length === 0 && (
+            <div className="mt-20 text-center text-[#666666]">
+              <p className="text-2xl font-extrabold">Nenhum resultado</p>
+              <p className="mt-2 text-sm">Tente ajustar os filtros ou a busca.</p>
+            </div>
+          )}
         </main>
       </div>
     </div>
