@@ -63,12 +63,7 @@ export default function Home() {
               nos localizamos o lance. Rapido, simples e sem perder tempo em dezenas de sites.
             </p>
 
-            <div className="mt-7 grid gap-3 sm:grid-cols-3">
-              <div className="glass-card rounded-2xl p-4">
-                <p className="text-xs font-semibold tracking-[0.14em] text-[#5b4f73]">PLANO BASE</p>
-                <p className="mt-2 text-3xl font-extrabold">R$ 39,90</p>
-                <p className="text-sm text-[#5b4f73]">25 consultas por ciclo</p>
-              </div>
+            <div className="mt-7 grid gap-3 sm:grid-cols-2">
               <div className="glass-card rounded-2xl p-4">
                 <p className="text-xs font-semibold tracking-[0.14em] text-[#5b4f73]">LEILOES</p>
                 <p className="mt-2 text-3xl font-extrabold">+10 mil</p>
