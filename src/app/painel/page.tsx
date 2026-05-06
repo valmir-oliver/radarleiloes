@@ -5,16 +5,17 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import { createClient } from "@/lib/supabase";
 
-const lotes = [
-  { id: 1, modelo: "Toyota Corolla XEi 2021", leiloeiro: "Copart", estado: "SP", cidade: "Sao Paulo", lance: "R$ 48.200", tipo: "Judicial", encerra: "08 Jun", encerraHoje: false },
-  { id: 2, modelo: "Honda Civic EXL 2020", leiloeiro: "VIP Leiloes", estado: "PR", cidade: "Curitiba", lance: "R$ 44.900", tipo: "Extrajudicial", encerra: "Encerra Hoje", encerraHoje: true },
-  { id: 3, modelo: "Onix LT 1.0 Turbo 2022", leiloeiro: "Sodre Santoro", estado: "MG", cidade: "Belo Horizonte", lance: "R$ 39.100", tipo: "Extrajudicial", encerra: "10 Jun", encerraHoje: false },
-  { id: 4, modelo: "HB20 Vision 1.0 2021", leiloeiro: "Superbid", estado: "GO", cidade: "Goiania", lance: "R$ 33.700", tipo: "Judicial", encerra: "Encerra Hoje", encerraHoje: true },
-  { id: 5, modelo: "Jeep Renegade Sport 2022", leiloeiro: "MGL Leiloes", estado: "RJ", cidade: "Rio de Janeiro", lance: "R$ 67.400", tipo: "Judicial", encerra: "12 Jun", encerraHoje: false },
-  { id: 6, modelo: "Fiat Strada Freedom 2023", leiloeiro: "Milan Leiloes", estado: "RS", cidade: "Porto Alegre", lance: "R$ 58.800", tipo: "Extrajudicial", encerra: "07 Jun", encerraHoje: false },
-  { id: 7, modelo: "Volkswagen Polo Highline 2022", leiloeiro: "Zukerman", estado: "SP", cidade: "Campinas", lance: "R$ 41.500", tipo: "Extrajudicial", encerra: "Encerra Hoje", encerraHoje: true },
-  { id: 8, modelo: "Chevrolet Tracker LTZ 2021", leiloeiro: "Freitas Leiloes", estado: "BA", cidade: "Salvador", lance: "R$ 72.300", tipo: "Judicial", encerra: "15 Jun", encerraHoje: false },
-];
+type Lote = {
+  id: string;
+  modelo: string;
+  leiloeiro: string;
+  estado: string | null;
+  cidade: string | null;
+  lance_atual: string | null;
+  tipo: string | null;
+  data_encerramento: string | null;
+  link_original: string | null;
+};
 
 const estados = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 
@@ -22,6 +23,8 @@ export default function PainelPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [verificando, setVerificando] = useState(true);
+  const [lotes, setLotes] = useState<Lote[]>([]);
+  const [carregandoLotes, setCarregandoLotes] = useState(true);
   const [busca, setBusca] = useState("");
   const [estado, setEstado] = useState("");
   const [tipo, setTipo] = useState("");
@@ -35,6 +38,16 @@ export default function PainelPage() {
       } else {
         setEmail(data.session.user.email ?? "");
         setVerificando(false);
+        // Busca lotes do banco
+        supabase
+          .from("lotes")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(100)
+          .then(({ data: rows }) => {
+            setLotes((rows as Lote[]) ?? []);
+            setCarregandoLotes(false);
+          });
       }
     });
   }, [router]);
@@ -185,19 +198,16 @@ export default function PainelPage() {
 
           {/* grid de cards */}
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {resultados.map((item) => (
+            {carregandoLotes ? (
+              <div className="col-span-3 py-20 text-center text-[#666666]">Carregando lotes...</div>
+            ) : resultados.map((item) => (
               <article key={item.id} className="overflow-hidden rounded-2xl border border-[#e0e0e0] bg-white shadow-sm transition-shadow hover:shadow-md">
                 {/* imagem placeholder */}
                 <div className="relative flex h-40 items-center justify-center bg-[#f0f0f0]">
                   <svg className="h-16 w-16 text-[#cccccc]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>
-                  {item.encerraHoje && (
-                    <span className="absolute left-2 top-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
-                      Encerra Hoje
-                    </span>
-                  )}
-                  {!item.encerraHoje && (
+                  {item.data_encerramento && (
                     <span className="absolute right-2 top-2 rounded-full border border-[#e0e0e0] bg-white px-2 py-0.5 text-xs font-semibold text-[#666666]">
-                      {item.encerra}
+                      {new Date(item.data_encerramento).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
                     </span>
                   )}
                 </div>
@@ -206,23 +216,27 @@ export default function PainelPage() {
                   <p className="text-sm font-bold leading-snug">{item.modelo}</p>
                   <p className="mt-1 flex items-center gap-1 text-xs text-[#666666]">
                     <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
-                    {item.cidade} - {item.estado}
+                    {item.cidade && `${item.cidade} - `}{item.estado ?? ""}
                   </p>
 
                   <div className="mt-3 flex items-end justify-between">
                     <div>
                       <p className="text-xs text-[#666666]">Lance atual</p>
-                      <p className="text-lg font-extrabold">{item.lance}</p>
+                      <p className="text-lg font-extrabold">{item.lance_atual ?? "—"}</p>
                     </div>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${item.tipo === "Judicial" ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"}`}>
-                      {item.tipo}
-                    </span>
+                    {item.tipo && (
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${item.tipo === "Judicial" ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"}`}>
+                        {item.tipo}
+                      </span>
+                    )}
                   </div>
 
                   <div className="mt-3 flex items-center justify-between gap-2">
                     <span className="text-xs text-[#666666]">{item.leiloeiro}</span>
                     <a
-                      href="#"
+                      href={item.link_original ?? "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 rounded-xl bg-[#6B21E8] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#5a18c7]"
                     >
                       Ver leilao
