@@ -15,6 +15,7 @@ type Lote = {
   tipo: string | null;
   data_encerramento: string | null;
   link_original: string | null;
+  imagem: string | null;
 };
 
 const estados = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
@@ -202,9 +203,27 @@ export default function PainelPage() {
               <div className="col-span-3 py-20 text-center text-[#666666]">Carregando lotes...</div>
             ) : resultados.map((item) => (
               <article key={item.id} className="overflow-hidden rounded-2xl border border-[#e0e0e0] bg-white shadow-sm transition-shadow hover:shadow-md">
-                {/* imagem placeholder */}
-                <div className="relative flex h-40 items-center justify-center bg-[#f0f0f0]">
-                  <svg className="h-16 w-16 text-[#cccccc]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>
+                {/* imagem do veículo */}
+                <div className="relative h-40 overflow-hidden bg-[#f0f0f0]">
+                  {item.imagem ? (
+                    <img
+                      src={item.imagem}
+                      alt={item.modelo}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        img.style.display = "none";
+                        const fallback = img.nextElementSibling as HTMLElement | null;
+                        if (fallback) fallback.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className="h-full w-full items-center justify-center bg-[#f0f0f0]"
+                    style={{ display: item.imagem ? "none" : "flex" }}
+                  >
+                    <svg className="h-16 w-16 text-[#cccccc]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" /></svg>
+                  </div>
                   {item.data_encerramento && (
                     <span className="absolute right-2 top-2 rounded-full border border-[#e0e0e0] bg-white px-2 py-0.5 text-xs font-semibold text-[#666666]">
                       {new Date(item.data_encerramento).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}

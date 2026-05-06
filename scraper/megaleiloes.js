@@ -63,6 +63,7 @@ async function scrapeMegaLeiloes() {
             tipo,
             data_encerramento,
             link_original,
+            imagem: null,
             fonte: "megaleiloes",
           });
         } catch (err) {

@@ -173,6 +173,7 @@ async function scrapeSodreSantoro() {
           tipo,
           data_encerramento,
           link_original,
+          imagem: item.lot_pictures?.[0] ?? null,
           fonte: "sodresantoro",
         });
       }
