@@ -54,7 +54,7 @@ export default function PainelPage() {
   const [busca, setBusca] = useState("");
   const [estado, setEstado] = useState("");
   const [tipo, setTipo] = useState("");
-  const [ordenacao, setOrdenacao] = useState("preco-menor");
+  const [ordenacao, setOrdenacao] = useState("relevante");
   const [sidebarAberta, setSidebarAberta] = useState(false);
 
   // Seleção e Análise Multi-Lotes (WhatsApp Desktop transfers/2026-19 feature requests)
@@ -144,6 +144,37 @@ export default function PainelPage() {
     router.push("/");
   }
 
+  const calcularRelevancia = (lote: Lote): number => {
+    let score = 0;
+
+    // Encerramento próximo = mais urgente = mais relevante (até 50 pts)
+    if (lote.data_encerramento) {
+      const partes = lote.data_encerramento.split("/");
+      const dataEnc = partes.length === 3
+        ? new Date(`${partes[2]}-${partes[1]}-${partes[0]}`)
+        : new Date(lote.data_encerramento);
+      const diasRestantes = (dataEnc.getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+      if (diasRestantes > 0 && diasRestantes <= 3) score += 50;
+      else if (diasRestantes > 0 && diasRestantes <= 7) score += 35;
+      else if (diasRestantes > 0 && diasRestantes <= 14) score += 20;
+      else if (diasRestantes > 0) score += 5;
+    }
+
+    // Preço baixo = mais acessível (até 30 pts)
+    const preco = getPrecoNumerico(lote.lance_atual);
+    if (preco <= 20000) score += 30;
+    else if (preco <= 50000) score += 20;
+    else if (preco <= 100000) score += 10;
+
+    // Tem imagem = dado mais completo (10 pts)
+    if (lote.imagem) score += 10;
+
+    // Tem cidade/estado = localização conhecida (10 pts)
+    if (lote.cidade && lote.estado) score += 10;
+
+    return score;
+  };
+
   const resultados = lotes
     .filter((l) => {
       const okBusca = busca === "" || l.modelo.toLowerCase().includes(busca.toLowerCase()) || l.leiloeiro.toLowerCase().includes(busca.toLowerCase());
@@ -152,7 +183,9 @@ export default function PainelPage() {
       return okBusca && okEstado && okTipo;
     })
     .sort((a, b) => {
-      if (ordenacao === "preco-menor") {
+      if (ordenacao === "relevante") {
+        return calcularRelevancia(b) - calcularRelevancia(a);
+      } else if (ordenacao === "preco-menor") {
         return getPrecoNumerico(a.lance_atual) - getPrecoNumerico(b.lance_atual);
       } else if (ordenacao === "preco-maior") {
         return getPrecoNumerico(b.lance_atual) - getPrecoNumerico(a.lance_atual);
@@ -497,6 +530,7 @@ export default function PainelPage() {
               onChange={(e) => setOrdenacao(e.target.value)}
               className="rounded-xl border border-[#e0e0e0] bg-white px-3 py-2 text-xs font-semibold text-[#111111] outline-none cursor-pointer hover:border-gray-300 transition-colors"
             >
+              <option value="relevante">Mais relevante</option>
               <option value="preco-menor">Preço: Menor</option>
               <option value="preco-maior">Preço: Maior</option>
               <option value="recente">Mais recente</option>
