@@ -113,6 +113,14 @@ export default function PainelPage() {
         setVerificando(false);
         // Busca todos os lotes do banco em páginas de 1000
         (async () => {
+          // Busca admins primeiro para liberar o acesso administrativo sem depender da carga de lotes.
+          const { data: dbAdmins } = await supabase
+            .from("administradores")
+            .select("email");
+          if (dbAdmins) {
+            setAdminEmails(dbAdmins.map((item: any) => item.email.toLowerCase().trim()));
+          }
+
           const PAGE = 1000;
           let todos: Lote[] = [];
           let from = 0;
@@ -129,14 +137,6 @@ export default function PainelPage() {
           }
           setLotes(todos);
           setCarregandoLotes(false);
-
-          // Busca emails de administradores dinâmicos do banco
-          const { data: dbAdmins } = await supabase
-            .from("administradores")
-            .select("email");
-          if (dbAdmins) {
-            setAdminEmails(dbAdmins.map((item: any) => item.email.toLowerCase().trim()));
-          }
 
           // Busca as solicitações reais de análise deste usuário no Supabase
           const { data: sols } = await supabase

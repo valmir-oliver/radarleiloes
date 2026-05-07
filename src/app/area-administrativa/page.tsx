@@ -320,6 +320,43 @@ export default function AreaAdministrativa() {
     }
   };
 
+  const autorizarAdmin = async (nome: string, email: string) => {
+    const emailLower = email.toLowerCase().trim();
+    const nomeNormalizado = nome.trim() || "Administrador";
+
+    if (!emailLower) {
+      alert("Informe um e-mail valido para conceder acesso administrativo.");
+      return false;
+    }
+
+    if (adminEmails.includes(emailLower) || ADMIN_EMAILS.includes(emailLower)) {
+      alert("Este e-mail já possui acesso administrativo.");
+      return false;
+    }
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("administradores")
+      .upsert(
+        {
+          email: emailLower,
+          nome: nomeNormalizado,
+        },
+        {
+          onConflict: "email",
+        }
+      );
+
+    if (error) {
+      console.error("Erro ao adicionar administrador:", error);
+      alert("Erro ao adicionar privilégio: " + error.message);
+      return false;
+    }
+
+    await carregarAdmins();
+    return true;
+  };
+
   const handleAdicionarAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!novoAdminEmail || !novoAdminNome) {
@@ -327,30 +364,13 @@ export default function AreaAdministrativa() {
       return;
     }
 
-    const emailLower = novoAdminEmail.toLowerCase().trim();
-    if (adminEmails.includes(emailLower) || ADMIN_EMAILS.includes(emailLower)) {
-      alert("Este e-mail já possui acesso administrativo.");
-      return;
-    }
-
     setSalvandoAdmin(true);
-    const supabase = createClient();
+    const autorizado = await autorizarAdmin(novoAdminNome, novoAdminEmail);
 
-    const { error } = await supabase
-      .from("administradores")
-      .insert({
-        email: emailLower,
-        nome: novoAdminNome.trim()
-      });
-
-    if (error) {
-      console.error("Erro ao adicionar administrador:", error);
-      alert("Erro ao adicionar privilégio: " + error.message);
-    } else {
+    if (autorizado) {
       alert("Novo administrador autorizado com sucesso!");
       setNovoAdminEmail("");
       setNovoAdminNome("");
-      await carregarAdmins();
     }
     setSalvandoAdmin(false);
   };
@@ -388,28 +408,12 @@ export default function AreaAdministrativa() {
 
   // Promover rapidamente um usuário listado para administrador
   const handleAutorizarUsuarioRapido = async (nome: string, email: string) => {
-    const emailLower = email.toLowerCase().trim();
-    if (adminEmails.includes(emailLower) || ADMIN_EMAILS.includes(emailLower)) {
-      alert("Este e-mail já possui acesso administrativo.");
-      return;
-    }
-
     setSalvandoAdmin(true);
-    const supabase = createClient();
+    const autorizado = await autorizarAdmin(nome, email);
 
-    const { error } = await supabase
-      .from("administradores")
-      .insert({
-        email: emailLower,
-        nome: nome.trim()
-      });
-
-    if (error) {
-      console.error("Erro ao adicionar administrador:", error);
-      alert("Erro ao adicionar privilégio: " + error.message);
-    } else {
+    if (autorizado) {
+      const emailLower = email.toLowerCase().trim();
       alert(`O usuário ${nome} (${emailLower}) foi promovido a Administrador com sucesso!`);
-      await carregarAdmins();
     }
     setSalvandoAdmin(false);
   };
@@ -1122,6 +1126,7 @@ Comportamento de Mercado: Liquidez histórica altíssima com depreciação contr
                                 <span className="text-[10px] font-bold text-[#6B21E8] uppercase tracking-wider select-none bg-indigo-50 px-2 py-1 rounded-lg">Você</span>
                               ) : (
                                 <button
+                                  type="button"
                                   onClick={() => handleRevogarAdmin(adm.id, adm.email)}
                                   className="rounded-xl border border-red-100 bg-red-50 p-2 text-red-600 hover:bg-red-100 hover:border-red-200 hover:shadow-xs active:scale-90 transition-all inline-flex items-center gap-1 font-bold text-[10px]"
                                   title="Revogar Privilégios"
@@ -1224,6 +1229,7 @@ Comportamento de Mercado: Liquidez histórica altíssima com depreciação contr
                                   </span>
                                 ) : (
                                   <button
+                                    type="button"
                                     onClick={() => handleAutorizarUsuarioRapido(u.nome, u.email)}
                                     disabled={salvandoAdmin}
                                     className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-[#6B21E8] hover:bg-[#6B21E8] hover:text-white hover:border-[#6B21E8] hover:shadow-xs active:scale-95 disabled:opacity-50 transition-all inline-flex items-center gap-1 font-extrabold text-[10px]"
@@ -1309,6 +1315,7 @@ Comportamento de Mercado: Liquidez histórica altíssima com depreciação contr
                                 </span>
                               ) : (
                                 <button
+                                  type="button"
                                   onClick={() => handleAutorizarUsuarioRapido(usr.nome, usr.email)}
                                   disabled={salvandoAdmin}
                                   className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-[#6B21E8] hover:bg-[#6B21E8] hover:text-white hover:border-[#6B21E8] hover:shadow-xs active:scale-95 disabled:opacity-50 transition-all inline-flex items-center gap-1 font-extrabold text-[10px]"
