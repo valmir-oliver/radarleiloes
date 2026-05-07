@@ -92,6 +92,15 @@ export default function AreaAdministrativa() {
   const [novoAdminNome, setNovoAdminNome] = useState("");
   const [salvandoAdmin, setSalvandoAdmin] = useState(false);
 
+  // Estado para armazenar usuários cadastrados carregados da view
+  interface RegisteredUser {
+    id: string;
+    email: string;
+    nome: string;
+    created_at?: string;
+  }
+  const [usuariosDoBanco, setUsuariosDoBanco] = useState<RegisteredUser[]>([]);
+
   const carregarDadosReais = async () => {
     try {
       const supabase = createClient();
@@ -104,6 +113,28 @@ export default function AreaAdministrativa() {
 
       if (errorSols) {
         console.error("Erro ao carregar solicitações:", errorSols);
+      }
+
+      // 1.2. Carregar todos os usuários cadastrados na plataforma (a partir da view, se existir)
+      let dbUsuariosRegistrados: any[] = [];
+      try {
+        const { data: viewUsers, error: errorView } = await supabase
+          .from("usuarios_registrados")
+          .select("*");
+
+        if (errorView) {
+          console.warn("View 'usuarios_registrados' não disponível:", errorView.message);
+        } else if (viewUsers) {
+          dbUsuariosRegistrados = viewUsers;
+          setUsuariosDoBanco(viewUsers.map((u: any) => ({
+            id: u.id,
+            email: (u.email || "").toLowerCase().trim(),
+            nome: u.nome || "Cliente Radar",
+            created_at: u.created_at,
+          })));
+        }
+      } catch (err) {
+        console.error("Erro ao carregar view de usuários:", err);
       }
 
       let listMapped: Solicitacao[] = [];
@@ -151,6 +182,16 @@ export default function AreaAdministrativa() {
       const uniqueEmails = new Set(
         (dbSolicitacoes || []).map((s: any) => s.solicitante_email.toLowerCase().trim())
       );
+      
+      // Se houver usuários carregados do banco de dados, certificar-se de incluí-los na contagem total
+      if (dbUsuariosRegistrados && dbUsuariosRegistrados.length > 0) {
+        dbUsuariosRegistrados.forEach((u: any) => {
+          if (u.email) {
+            uniqueEmails.add(u.email.toLowerCase().trim());
+          }
+        });
+      }
+
       const emailCount = uniqueEmails.size;
 
       // Definir contagens reais absolutas do banco
@@ -1115,8 +1156,8 @@ Comportamento de Mercado: Liquidez histórica altíssima com depreciação contr
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                   </span>
                   <div>
-                    <p className="text-xs font-black uppercase tracking-wider text-gray-900">Usuários Ativos na Plataforma</p>
-                    <p className="text-[10px] text-gray-400 font-semibold">Clientes e solicitantes que interagiram ou enviaram lotes para análise</p>
+                    <p className="text-xs font-black uppercase tracking-wider text-gray-900">Todos os Usuários Cadastrados</p>
+                    <p className="text-[10px] text-gray-400 font-semibold">Lista completa de contas registradas na plataforma e solicitantes de análise ativos</p>
                   </div>
                 </div>
               </div>
@@ -1133,8 +1174,71 @@ Comportamento de Mercado: Liquidez histórica altíssima com depreciação contr
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {/* Lista computada de usuários com base nas solicitações */}
-                    {(() => {
+                     {(() => {
+                      // Se tivermos os dados dos usuários diretamente cadastrados via view do banco
+                      if (usuariosDoBanco && usuariosDoBanco.length > 0) {
+                        return usuariosDoBanco.map((u) => {
+                          const emailLower = (u.email || "").toLowerCase().trim();
+                          const totalSolicitacoes = solicitacoes.filter(
+                            (s) => (s.solicitante_email || "").toLowerCase().trim() === emailLower
+                          ).length;
+
+                          const isNativo = ADMIN_EMAILS.includes(emailLower);
+                          const isDinamico = adminEmails.includes(emailLower);
+                          const isAuthorized = isNativo || isDinamico;
+
+                          return (
+                            <tr key={emailLower} className="hover:bg-gray-50/50 transition-colors">
+                              <td className="py-4 px-6 font-bold text-gray-900 flex items-center gap-2">
+                                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-purple-50 text-[11px] font-black text-purple-700">
+                                  {u.nome.charAt(0).toUpperCase()}
+                                </span>
+                                {u.nome}
+                              </td>
+                              <td className="py-4 px-6 text-gray-500 font-semibold">{u.email}</td>
+                              <td className="py-4 px-6 font-bold text-gray-700">
+                                <span className="rounded-lg bg-gray-100 px-2.5 py-1 text-[11px]">
+                                  📋 {totalSolicitacoes} {totalSolicitacoes === 1 ? "solicitação" : "solicitações"}
+                                </span>
+                              </td>
+                              <td className="py-4 px-6">
+                                {isNativo ? (
+                                  <span className="rounded-full bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 text-[10px] font-black text-indigo-700">
+                                    👑 Administrador Nativo
+                                  </span>
+                                ) : isDinamico ? (
+                                  <span className="rounded-full bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 text-[10px] font-black text-emerald-700">
+                                    🛡️ Administrador Dinâmico
+                                  </span>
+                                ) : (
+                                  <span className="rounded-full bg-gray-50 border border-gray-200 px-2.5 py-0.5 text-[10px] font-black text-gray-500">
+                                    👤 Cliente Padrão
+                                  </span>
+                                )}
+                              </td>
+                              <td className="py-4 px-6 text-right">
+                                {isAuthorized ? (
+                                  <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-emerald-600 px-2 py-1">
+                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                    Acesso Ativo
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() => handleAutorizarUsuarioRapido(u.nome, u.email)}
+                                    disabled={salvandoAdmin}
+                                    className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-[#6B21E8] hover:bg-[#6B21E8] hover:text-white hover:border-[#6B21E8] hover:shadow-xs active:scale-95 disabled:opacity-50 transition-all inline-flex items-center gap-1 font-extrabold text-[10px]"
+                                  >
+                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+                                    Autorizar Admin
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        });
+                      }
+
+                      // Fallback: se a view de cadastrados ainda não foi criada no Supabase
                       const uniqueUsersMap = new Map<string, { nome: string; email: string; totalSolicitacoes: number }>();
                       
                       solicitacoes.forEach((s) => {
@@ -1207,7 +1311,7 @@ Comportamento de Mercado: Liquidez histórica altíssima com depreciação contr
                                 <button
                                   onClick={() => handleAutorizarUsuarioRapido(usr.nome, usr.email)}
                                   disabled={salvandoAdmin}
-                                  className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-[#6B21E8] hover:bg-[#6B21E8] hover:text-white hover:border-[#6B21E8] hover:shadow-xs active:scale-95 transition-all inline-flex items-center gap-1 font-extrabold text-[10px] disabled:opacity-50"
+                                  className="rounded-xl border border-purple-200 bg-purple-50 px-3 py-1.5 text-[#6B21E8] hover:bg-[#6B21E8] hover:text-white hover:border-[#6B21E8] hover:shadow-xs active:scale-95 disabled:opacity-50 transition-all inline-flex items-center gap-1 font-extrabold text-[10px]"
                                 >
                                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
                                   Autorizar Admin

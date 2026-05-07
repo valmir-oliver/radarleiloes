@@ -121,3 +121,19 @@ INSERT INTO public.administradores (email, nome) VALUES
 ('suporte@radarleiloes.com', 'Suporte Radar')
 ON CONFLICT (email) DO NOTHING;
 
+
+-- ====================================================================
+-- 7. CREATE 'USUARIOS_REGISTRADOS' VIEW TO EXPOSE AUTHENTICATED USERS
+-- ====================================================================
+-- This view safely exposes the list of users registered in Supabase Auth (auth.users)
+-- so they can be viewed and promoted directly inside the Administrative Panel.
+CREATE OR REPLACE VIEW public.usuarios_registrados AS
+SELECT 
+    id,
+    email,
+    COALESCE(raw_user_meta_data->>'nome_completo', 'Cliente Radar') AS nome,
+    created_at
+FROM auth.users;
+
+GRANT SELECT ON public.usuarios_registrados TO authenticated;
+
