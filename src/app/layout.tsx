@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   title: "Radar de Leiloes | Busca de Veiculos",
   description:
     "Encontre oportunidades em varios leiloes de veiculos em um unico painel de busca.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
