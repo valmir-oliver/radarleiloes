@@ -49,6 +49,12 @@ function isUserAdmin(email: string | null | undefined): boolean {
   );
 }
 
+function getPrecoNumerico(lance: string | null | undefined): number {
+  if (!lance) return 45000;
+  const num = parseFloat(lance.replace(/[^0-9.-]/g, ""));
+  return isNaN(num) || num === 0 ? 45000 : num;
+}
+
 export default function PainelPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -58,6 +64,7 @@ export default function PainelPage() {
   const [busca, setBusca] = useState("");
   const [estado, setEstado] = useState("");
   const [tipo, setTipo] = useState("");
+  const [ordenacao, setOrdenacao] = useState("preco-menor");
   const [sidebarAberta, setSidebarAberta] = useState(false);
 
   // Seleção e Análise Multi-Lotes (WhatsApp Desktop transfers/2026-19 feature requests)
@@ -128,12 +135,25 @@ export default function PainelPage() {
     router.push("/");
   }
 
-  const resultados = lotes.filter((l) => {
-    const okBusca = busca === "" || l.modelo.toLowerCase().includes(busca.toLowerCase()) || l.leiloeiro.toLowerCase().includes(busca.toLowerCase());
-    const okEstado = estado === "" || l.estado === estado;
-    const okTipo = tipo === "" || l.tipo === tipo;
-    return okBusca && okEstado && okTipo;
-  });
+  const resultados = lotes
+    .filter((l) => {
+      const okBusca = busca === "" || l.modelo.toLowerCase().includes(busca.toLowerCase()) || l.leiloeiro.toLowerCase().includes(busca.toLowerCase());
+      const okEstado = estado === "" || l.estado === estado;
+      const okTipo = tipo === "" || l.tipo === tipo;
+      return okBusca && okEstado && okTipo;
+    })
+    .sort((a, b) => {
+      if (ordenacao === "preco-menor") {
+        return getPrecoNumerico(a.lance_atual) - getPrecoNumerico(b.lance_atual);
+      } else if (ordenacao === "preco-maior") {
+        return getPrecoNumerico(b.lance_atual) - getPrecoNumerico(a.lance_atual);
+      } else if (ordenacao === "recente") {
+        const dateA = a.data_encerramento ? new Date(a.data_encerramento.split("/").reverse().join("-")) : new Date(0);
+        const dateB = b.data_encerramento ? new Date(b.data_encerramento.split("/").reverse().join("-")) : new Date(0);
+        return dateB.getTime() - dateA.getTime();
+      }
+      return 0;
+    });
 
   const selectedLotes = lotes.filter((l) => selectedLoteIds.has(l.id));
 
@@ -252,12 +272,6 @@ export default function PainelPage() {
       setAnalisandoStatus("Relatório estruturado com sucesso!");
       setAnaliseConcluida(true);
     }, 2400);
-  };
-
-  const getPrecoNumerico = (lance: string | null) => {
-    if (!lance) return 45000;
-    const num = parseFloat(lance.replace(/[^0-9.-]/g, ""));
-    return isNaN(num) || num === 0 ? 45000 : num;
   };
 
   const calcularDadosSimulados = (item: Lote) => {
@@ -423,10 +437,14 @@ export default function PainelPage() {
               </span>
               <span className="text-sm text-[#666666]">encontrados</span>
             </div>
-            <select className="rounded-xl border border-[#e0e0e0] bg-white px-3 py-2 text-xs font-semibold text-[#111111] outline-none">
-              <option>Preco: Menor</option>
-              <option>Preco: Maior</option>
-              <option>Mais recente</option>
+            <select 
+              value={ordenacao}
+              onChange={(e) => setOrdenacao(e.target.value)}
+              className="rounded-xl border border-[#e0e0e0] bg-white px-3 py-2 text-xs font-semibold text-[#111111] outline-none cursor-pointer hover:border-gray-300 transition-colors"
+            >
+              <option value="preco-menor">Preço: Menor</option>
+              <option value="preco-maior">Preço: Maior</option>
+              <option value="recente">Mais recente</option>
             </select>
           </div>
 
