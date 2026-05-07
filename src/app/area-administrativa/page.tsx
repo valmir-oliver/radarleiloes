@@ -42,8 +42,6 @@ export default function AreaAdministrativa() {
   const [leiloesDestaqueCount, setLeiloesDestaqueCount] = useState(0);
   const [oportunidadesCount, setOportunidadesCount] = useState(0);
   const [aprovadosPorcentagem, setAprovadosPorcentagem] = useState(0);
-  const [analistaWilliamCount, setAnalistaWilliamCount] = useState(0);
-  const [analistaLuizCount, setAnalistaLuizCount] = useState(0);
 
   // Filtros
   const [busca, setBusca] = useState("");
@@ -225,15 +223,7 @@ export default function AreaAdministrativa() {
         setOportunidadesCount(0);
       }
 
-      // Distribuição real dos analistas (William e Luiz) baseada exclusivamente em registros reais concluídos do banco
       const completedList = (dbSolicitacoes || []).filter((s: any) => s.status === "Concluído");
-      const totalConcluidasReal = completedList.length;
-
-      const williamReal = Math.floor(totalConcluidasReal / 2);
-      const luizReal = totalConcluidasReal - williamReal;
-
-      setAnalistaWilliamCount(williamReal);
-      setAnalistaLuizCount(luizReal);
 
       const approvedCount = completedList.filter(
         (s: any) => s.recomendacao === "Aprovado" || s.recomendacao === "Aprovado com ressalvas"
@@ -706,41 +696,9 @@ Comportamento de Mercado: Liquidez histórica altíssima com depreciação contr
               </div>
             </div>
 
-            {/* Desempenho dos Analistas & Detalhes */}
+            {/* Recomendações do Mês */}
             <div className="grid gap-6 lg:grid-cols-3">
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 lg:col-span-2 space-y-4">
-                <h3 className="text-sm font-black uppercase tracking-wider text-gray-400">Desempenho dos Analistas</h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-100 text-gray-400 uppercase font-extrabold tracking-wider">
-                        <th className="py-3 px-2">Analista</th>
-                        <th className="py-3 px-2">Análises Concluídas</th>
-                        <th className="py-3 px-2">Avaliação Média</th>
-                        <th className="py-3 px-2">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      <tr>
-                        <td className="py-4.5 px-2 font-bold text-gray-900">William Gualberto</td>
-                        <td className="py-4.5 px-2">{analistaWilliamCount} pareceres</td>
-                        <td className={`py-4.5 px-2 font-extrabold ${analistaWilliamCount > 0 ? "text-emerald-600" : "text-gray-400"}`}>
-                          {analistaWilliamCount > 0 ? "9.8/10" : "0/10"}
-                        </td>
-                        <td className="py-4.5 px-2"><span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600">Online</span></td>
-                      </tr>
-                      <tr>
-                        <td className="py-4.5 px-2 font-bold text-gray-900">Luiz Antonio Macêdo</td>
-                        <td className="py-4.5 px-2">{analistaLuizCount} pareceres</td>
-                        <td className={`py-4.5 px-2 font-extrabold ${analistaLuizCount > 0 ? "text-emerald-600" : "text-gray-400"}`}>
-                          {analistaLuizCount > 0 ? "9.6/10" : "0/10"}
-                        </td>
-                        <td className="py-4.5 px-2"><span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-600">Online</span></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <div className="lg:col-span-2" />
 
               <div className="rounded-2xl border border-gray-200 bg-white p-6 space-y-4">
                 <h3 className="text-sm font-black uppercase tracking-wider text-gray-400">Recomendações do Mês</h3>
