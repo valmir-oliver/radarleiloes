@@ -11,7 +11,7 @@ require("dotenv").config({ path: path.join(__dirname, "../.env.local") });
 puppeteer.use(StealthPlugin());
 
 const ROWS_PER_PAGE = 10; // API do Copart BR retorna máximo 10 por página
-const MAX_PAGES = 100; // 100 páginas × 10 = 1000 lotes por execução
+const MAX_PAGES = 100; // 100 páginas × 10 = 1000 lotes mais recentes
 
 function parseLocation(yn) {
   if (!yn) return { cidade: null, estado: null };
@@ -36,7 +36,7 @@ async function fetchPage(page, start) {
           body: JSON.stringify({
             query: ["*"],
             filter: {},
-            sort: ["auction_date_type asc"],
+            sort: ["auction_date_type desc"],
             page: Math.floor(start / rows),
             size: rows,
             start: start,
