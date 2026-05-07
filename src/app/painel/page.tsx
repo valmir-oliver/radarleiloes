@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { createClient } from "@/lib/supabase";
+import { isAdminUser } from "@/lib/admin";
 
 type Lote = {
   id: string;
@@ -30,23 +31,6 @@ function formatarMoeda(valor: number | string | null | undefined): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });
-}
-
-const ADMIN_EMAILS = [
-  "valmirbc@gmail.com",
-  "valmir-oliver@hotmail.com",
-  "admin@radarleiloes.com",
-  "suporte@radarleiloes.com"
-];
-
-function isUserAdmin(email: string | null | undefined): boolean {
-  if (!email) return false;
-  const lowercaseEmail = email.toLowerCase().trim();
-  return (
-    ADMIN_EMAILS.includes(lowercaseEmail) ||
-    lowercaseEmail.endsWith("@radarleiloes.com.br") ||
-    lowercaseEmail.endsWith("@radarleiloes.com")
-  );
 }
 
 function getPrecoNumerico(lance: string | null | undefined): number {
@@ -84,18 +68,7 @@ export default function PainelPage() {
   const [solicitacaoEnviando, setSolicitacaoEnviando] = useState(false);
   const [multiEnviando, setMultiEnviando] = useState(false);
   const [multiSucesso, setMultiSucesso] = useState(false);
-  const [adminEmails, setAdminEmails] = useState<string[]>([]);
-
-  const isUserAdmin = (emailToCheck: string | null | undefined): boolean => {
-    if (!emailToCheck) return false;
-    const lower = emailToCheck.toLowerCase().trim();
-    return (
-      ADMIN_EMAILS.includes(lower) ||
-      lower.endsWith("@radarleiloes.com.br") ||
-      lower.endsWith("@radarleiloes.com") ||
-      adminEmails.includes(lower)
-    );
-  };
+  const [usuarioAdmin, setUsuarioAdmin] = useState(false);
 
   // Estados Reais para Persistência no Banco de Dados
   const [userSolicitacoes, setUserSolicitacoes] = useState<any[]>([]);
@@ -105,22 +78,15 @@ export default function PainelPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
+    supabase.auth.getUser().then(({ data, error }) => {
+      if (error || !data.user) {
         router.replace("/entrar");
       } else {
-        setEmail(data.session.user.email ?? "");
+        setEmail(data.user.email ?? "");
+        setUsuarioAdmin(isAdminUser(data.user));
         setVerificando(false);
         // Busca todos os lotes do banco em páginas de 1000
         (async () => {
-          // Busca admins primeiro para liberar o acesso administrativo sem depender da carga de lotes.
-          const { data: dbAdmins } = await supabase
-            .from("administradores")
-            .select("email");
-          if (dbAdmins) {
-            setAdminEmails(dbAdmins.map((item: any) => item.email.toLowerCase().trim()));
-          }
-
           const PAGE = 1000;
           let todos: Lote[] = [];
           let from = 0;
@@ -142,7 +108,7 @@ export default function PainelPage() {
           const { data: sols } = await supabase
             .from("solicitacoes_analise")
             .select("*")
-            .eq("solicitante_email", data.session.user.email);
+            .eq("solicitante_email", data.user.email);
           if (sols) {
             setUserSolicitacoes(sols);
           }
@@ -393,7 +359,7 @@ export default function PainelPage() {
             <span className="hidden rounded-full border border-[#e0e0e0] bg-[#f5f5f5] px-3 py-1 text-xs font-semibold text-[#666666] sm:inline">
               {email}
             </span>
-            {isUserAdmin(email) && (
+            {usuarioAdmin && (
               <Link
                 href="/area-administrativa"
                 className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-4 py-1.5 text-xs font-bold text-indigo-700 transition-colors animate-pulse"
