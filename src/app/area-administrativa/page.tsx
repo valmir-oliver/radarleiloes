@@ -162,24 +162,135 @@ export default function AreaAdministrativa() {
   const [recomendacao, setRecomendacao] = useState<"Aprovado" | "Aprovado com ressalvas" | "Reprovado">("Aprovado");
   const [analisandoIA, setAnalisandoIA] = useState(false);
 
-  // Verificar Auth
+  // Estados de Controle de Administradores dinâmicos
+  const [adminEmails, setAdminEmails] = useState<string[]>([]);
+  const [adminsRaw, setAdminsRaw] = useState<any[]>([]);
+  const [novoAdminEmail, setNovoAdminEmail] = useState("");
+  const [novoAdminNome, setNovoAdminNome] = useState("");
+  const [salvandoAdmin, setSalvandoAdmin] = useState(false);
+
+  // Verificar Auth e carregar administradores dinâmicos do banco
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) {
         router.push("/entrar");
       } else {
         const userEmail = data.session.user.email;
-        if (!isUserAdmin(userEmail)) {
+
+        // Busca a lista dinâmica de administradores do banco
+        const { data: dbAdmins, error } = await supabase
+          .from("administradores")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        const dynamicEmails = dbAdmins 
+          ? dbAdmins.map((item: any) => item.email.toLowerCase().trim())
+          : [];
+
+        const isUserAuthorized = (emailToCheck: string | null | undefined): boolean => {
+          if (!emailToCheck) return false;
+          const lower = emailToCheck.toLowerCase().trim();
+          return (
+            ADMIN_EMAILS.includes(lower) ||
+            lower.endsWith("@radarleiloes.com.br") ||
+            lower.endsWith("@radarleiloes.com") ||
+            dynamicEmails.includes(lower)
+          );
+        };
+
+        if (!isUserAuthorized(userEmail)) {
           alert("Acesso Negado: Esta área é restrita aos administradores.");
           router.push("/painel");
         } else {
           setSessionUser(userEmail ?? "Administrador");
+          if (dbAdmins) {
+            setAdminsRaw(dbAdmins);
+            setAdminEmails(dynamicEmails);
+          }
           setVerificando(false);
         }
       }
     });
   }, [router]);
+
+  const carregarAdmins = async () => {
+    const supabase = createClient();
+    const { data: dbAdmins } = await supabase
+      .from("administradores")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (dbAdmins) {
+      setAdminsRaw(dbAdmins);
+      setAdminEmails(dbAdmins.map((item: any) => item.email.toLowerCase().trim()));
+    }
+  };
+
+  const handleAdicionarAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!novoAdminEmail || !novoAdminNome) {
+      alert("Por favor, preencha o nome e o e-mail.");
+      return;
+    }
+
+    const emailLower = novoAdminEmail.toLowerCase().trim();
+    if (adminEmails.includes(emailLower) || ADMIN_EMAILS.includes(emailLower)) {
+      alert("Este e-mail já possui acesso administrativo.");
+      return;
+    }
+
+    setSalvandoAdmin(true);
+    const supabase = createClient();
+
+    const { error } = await supabase
+      .from("administradores")
+      .insert({
+        email: emailLower,
+        nome: novoAdminNome.trim()
+      });
+
+    if (error) {
+      console.error("Erro ao adicionar administrador:", error);
+      alert("Erro ao adicionar privilégio: " + error.message);
+    } else {
+      alert("Novo administrador autorizado com sucesso!");
+      setNovoAdminEmail("");
+      setNovoAdminNome("");
+      await carregarAdmins();
+    }
+    setSalvandoAdmin(false);
+  };
+
+  const handleRevogarAdmin = async (id: string, emailRevogar: string) => {
+    const emailLower = emailRevogar.toLowerCase().trim();
+    if (ADMIN_EMAILS.includes(emailLower)) {
+      alert("Não é permitido revogar os administradores do sistema nativo padrão.");
+      return;
+    }
+
+    if (sessionUser && sessionUser.toLowerCase().trim() === emailLower) {
+      alert("Você não pode revogar o seu próprio acesso enquanto está logado!");
+      return;
+    }
+
+    if (!confirm(`Tem certeza que deseja revogar o acesso administrativo de ${emailRevogar}?`)) {
+      return;
+    }
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("administradores")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      console.error("Erro ao revogar administrador:", error);
+      alert("Erro ao revogar privilégio: " + error.message);
+    } else {
+      alert("Acesso administrativo revogado com sucesso.");
+      await carregarAdmins();
+    }
+  };
 
   // Função para simular escrita da IA (Letter-by-letter typing animation)
   const handleAnalisarComIA = () => {
@@ -685,12 +796,163 @@ Comportamento de Mercado: Liquidez histórica altíssima com depreciação contr
         )}
 
         {tabAtiva === "usuarios" && (
-          <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center animate-fade-in space-y-3">
-            <svg className="h-12 w-12 mx-auto text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-            <h3 className="text-base font-black text-gray-900">Controle de Usuários</h3>
-            <p className="text-xs text-gray-500 max-w-sm mx-auto">
-              Consulte e edite permissões de assinantes VIP, controle de faturamento recorrente e bloqueio de usuários inadimplentes.
-            </p>
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-2xl font-black text-gray-900 tracking-tight">Controle de Acesso Administrativo center</h2>
+              <p className="text-xs text-gray-500 font-semibold">Gerencie quais contas cadastradas possuem permissão total para acessar a Área Administrativa, emitir laudos e gerenciar lotes.</p>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-3">
+              {/* Coluna Esquerda: Formulário de Nova Autorização */}
+              <div className="rounded-2xl border border-gray-200 bg-white p-6 h-fit space-y-4 shadow-xs">
+                <div className="flex items-center gap-2 text-[#6B21E8] font-black uppercase tracking-wider text-xs border-b border-gray-100 pb-3">
+                  <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+                  Autorizar Administrador
+                </div>
+
+                <form onSubmit={handleAdicionarAdmin} className="space-y-3.5">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Nome Completo</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="Ex: Carlos Eduardo de Souza" 
+                      value={novoAdminNome}
+                      onChange={(e) => setNovoAdminNome(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-xs font-semibold text-gray-800 outline-none focus:border-[#6B21E8] bg-gray-50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-wider text-gray-400 mb-1">Email Cadastrado</label>
+                    <input 
+                      type="email" 
+                      required
+                      placeholder="Ex: carlos.admin@radarleiloes.com" 
+                      value={novoAdminEmail}
+                      onChange={(e) => setNovoAdminEmail(e.target.value)}
+                      className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-xs font-semibold text-gray-800 outline-none focus:border-[#6B21E8] bg-gray-50"
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    disabled={salvandoAdmin}
+                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-[#6B21E8] to-[#5a18c7] py-2.5 text-xs font-black text-white hover:from-[#5a18c7] hover:to-[#4910ab] active:scale-95 transition-all shadow-md disabled:opacity-50"
+                  >
+                    {salvandoAdmin ? (
+                      <>
+                        <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                        Autorizando...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Autorizar Acesso Administrativo
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <div className="rounded-xl bg-indigo-50/50 border border-indigo-100 p-3.5 text-[11px] text-indigo-800 space-y-1">
+                  <p className="font-extrabold flex items-center gap-1">💡 Regra de Segurança</p>
+                  <p className="leading-relaxed text-indigo-600 font-semibold">O novo administrador precisará possuir ou criar uma conta na plataforma utilizando este mesmo e-mail para que os privilégios sejam vinculados de forma segura.</p>
+                </div>
+              </div>
+
+              {/* Coluna Direita: Tabela de Administradores Cadastrados */}
+              <div className="rounded-2xl border border-gray-200 bg-white shadow-xs lg:col-span-2 overflow-hidden flex flex-col">
+                <div className="border-b border-gray-100 bg-gray-50/50 px-6 py-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-indigo-50 border border-indigo-100 p-1.5 text-[#6B21E8]">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    </span>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wider text-gray-900">Administradores Ativos</p>
+                      <p className="text-[10px] text-gray-400 font-semibold">Total de {adminsRaw.length + ADMIN_EMAILS.length} contas autorizadas</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto flex-1">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-100 bg-gray-50/30 text-gray-400 uppercase font-extrabold tracking-wider">
+                        <th className="py-3 px-6">Administrador</th>
+                        <th className="py-3 px-6">E-mail de Login</th>
+                        <th className="py-3 px-6">Privilégio</th>
+                        <th className="py-3 px-6 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {/* Administradores Nativos (Hardcoded fallback) */}
+                      {ADMIN_EMAILS.map((natEmail) => (
+                        <tr key={natEmail} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="py-4.5 px-6 font-bold text-gray-900 flex items-center gap-2">
+                            <span>👑</span>
+                            {natEmail === "valmirbc@gmail.com" ? "Valmir BC" : natEmail === "valmir-oliver@hotmail.com" ? "Valmir Oliver" : "Administrador Principal"}
+                          </td>
+                          <td className="py-4.5 px-6 text-gray-500 font-semibold">{natEmail}</td>
+                          <td className="py-4.5 px-6">
+                            <span className="rounded-full bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 text-[10px] font-black text-indigo-700">
+                              Nativo / Core
+                            </span>
+                          </td>
+                          <td className="py-4.5 px-6 text-right">
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider select-none">Inalterável</span>
+                          </td>
+                        </tr>
+                      ))}
+
+                      {/* Administradores Dinâmicos (Banco de dados) */}
+                      {adminsRaw.map((adm) => {
+                        const isNativo = ADMIN_EMAILS.includes(adm.email.toLowerCase().trim());
+                        if (isNativo) return null; // evita duplicar os que já estão no array estático
+                        
+                        const isSelf = sessionUser && sessionUser.toLowerCase().trim() === adm.email.toLowerCase().trim();
+
+                        return (
+                          <tr key={adm.id} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="py-4.5 px-6 font-bold text-gray-900 flex items-center gap-2">
+                              <span>👤</span>
+                              {adm.nome}
+                            </td>
+                            <td className="py-4.5 px-6 text-gray-500 font-semibold">{adm.email}</td>
+                            <td className="py-4.5 px-6">
+                              <span className="rounded-full bg-emerald-50 border border-emerald-100 px-2.5 py-0.5 text-[10px] font-black text-emerald-700">
+                                Banco / Dinâmico
+                              </span>
+                            </td>
+                            <td className="py-4.5 px-6 text-right">
+                              {isSelf ? (
+                                <span className="text-[10px] font-bold text-[#6B21E8] uppercase tracking-wider select-none bg-indigo-50 px-2 py-1 rounded-lg">Você</span>
+                              ) : (
+                                <button
+                                  onClick={() => handleRevogarAdmin(adm.id, adm.email)}
+                                  className="rounded-xl border border-red-100 bg-red-50 p-2 text-red-600 hover:bg-red-100 hover:border-red-200 hover:shadow-xs active:scale-90 transition-all inline-flex items-center gap-1 font-bold text-[10px]"
+                                  title="Revogar Privilégios"
+                                >
+                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                  Revogar
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                      {adminsRaw.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="py-12 text-center text-gray-500 font-semibold">
+                            Nenhum administrador dinâmico cadastrado no banco ainda.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </main>

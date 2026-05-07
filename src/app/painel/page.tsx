@@ -82,6 +82,20 @@ export default function PainelPage() {
   const [solicitacaoLote, setSolicitacaoLote] = useState<Lote | null>(null);
   const [solicitacaoSucesso, setSolicitacaoSucesso] = useState(false);
   const [solicitacaoEnviando, setSolicitacaoEnviando] = useState(false);
+  const [multiEnviando, setMultiEnviando] = useState(false);
+  const [multiSucesso, setMultiSucesso] = useState(false);
+  const [adminEmails, setAdminEmails] = useState<string[]>([]);
+
+  const isUserAdmin = (emailToCheck: string | null | undefined): boolean => {
+    if (!emailToCheck) return false;
+    const lower = emailToCheck.toLowerCase().trim();
+    return (
+      ADMIN_EMAILS.includes(lower) ||
+      lower.endsWith("@radarleiloes.com.br") ||
+      lower.endsWith("@radarleiloes.com") ||
+      adminEmails.includes(lower)
+    );
+  };
 
   // Estados Reais para Persistência no Banco de Dados
   const [userSolicitacoes, setUserSolicitacoes] = useState<any[]>([]);
@@ -115,6 +129,14 @@ export default function PainelPage() {
           }
           setLotes(todos);
           setCarregandoLotes(false);
+
+          // Busca emails de administradores dinâmicos do banco
+          const { data: dbAdmins } = await supabase
+            .from("administradores")
+            .select("email");
+          if (dbAdmins) {
+            setAdminEmails(dbAdmins.map((item: any) => item.email.toLowerCase().trim()));
+          }
 
           // Busca as solicitações reais de análise deste usuário no Supabase
           const { data: sols } = await supabase
@@ -244,6 +266,52 @@ export default function PainelPage() {
       }, 1500);
     }
     setSolicitacaoEnviando(false);
+  };
+
+  const submitSolicitacoesMultiplas = async () => {
+    if (selectedLotes.length === 0) return;
+    setMultiEnviando(true);
+    setMultiSucesso(false);
+    const supabase = createClient();
+
+    const payload = selectedLotes.map((l) => ({
+      lote_id: l.id,
+      descricao_veiculo: l.modelo,
+      leiloeiro: l.leiloeiro,
+      link_original: l.link_original,
+      data_encerramento: l.data_encerramento,
+      solicitante_email: email,
+      solicitante_nome: email.split("@")[0], // fallback name
+      lance_maximo: 0,
+      observacoes_cliente: "Solicitado em lote via Relatório Analítico Radar AI",
+      status: "Aberto"
+    }));
+
+    const { error } = await supabase
+      .from("solicitacoes_analise")
+      .insert(payload);
+
+    if (error) {
+      console.error("Erro ao inserir solicitações em lote:", error);
+    } else {
+      // Atualiza lista local das solicitações do usuário
+      const { data: sols } = await supabase
+        .from("solicitacoes_analise")
+        .select("*")
+        .eq("solicitante_email", email);
+      if (sols) {
+        setUserSolicitacoes(sols);
+      }
+
+      setMultiSucesso(true);
+      // Limpa a seleção após envio bem sucedido
+      setSelectedLoteIds(new Set());
+      setTimeout(() => {
+        setAnaliseModalAberta(false);
+        setMultiSucesso(false);
+      }, 2000);
+    }
+    setMultiEnviando(false);
   };
 
   const handleAnalisarMultiples = () => {
@@ -710,6 +778,17 @@ export default function PainelPage() {
                 {/* Fase 2: Relatório Pronto */}
                 {analiseConcluida && (
                   <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                    {multiSucesso && (
+                      <div className="rounded-2xl bg-emerald-50 border border-emerald-200 p-4 text-emerald-800 flex items-center gap-3 animate-pulse">
+                        <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <div>
+                          <p className="text-xs font-black">Solicitação enviada com sucesso!</p>
+                          <p className="text-[10px] text-emerald-600 font-semibold">Os veículos selecionados foram enviados para análise pericial do Radar Leilões.</p>
+                        </div>
+                      </div>
+                    )}
                     
                     {/* Resumo das métricas */}
                     <div className="grid gap-3 sm:grid-cols-3">
@@ -798,13 +877,37 @@ export default function PainelPage() {
                     Fechar
                   </button>
                   {analiseConcluida && (
-                    <button 
-                      onClick={() => { window.print(); }}
-                      className="inline-flex items-center gap-1.5 rounded-xl bg-[#6B21E8] px-4.5 py-2 text-xs font-bold text-white hover:bg-[#5a18c7] active:scale-95 transition-all shadow-md"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
-                      Imprimir Relatório
-                    </button>
+                    <>
+                      <button 
+                        onClick={submitSolicitacoesMultiplas}
+                        disabled={multiEnviando || multiSucesso}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 px-4.5 py-2 text-xs font-black text-white hover:from-orange-600 hover:to-amber-700 active:scale-95 transition-all shadow-md disabled:opacity-50"
+                      >
+                        {multiEnviando ? (
+                          <>
+                            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                            Enviando...
+                          </>
+                        ) : multiSucesso ? (
+                          <>
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            Enviado!
+                          </>
+                        ) : (
+                          <>
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            Solicitar a Analista Radar Leilão
+                          </>
+                        )}
+                      </button>
+                      <button 
+                        onClick={() => { window.print(); }}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-[#6B21E8] px-4.5 py-2 text-xs font-bold text-white hover:bg-[#5a18c7] active:scale-95 transition-all shadow-md"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                        Imprimir Relatório
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

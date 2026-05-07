@@ -84,3 +84,40 @@ CREATE POLICY "Permitir atualizacao de solicitacoes para autenticados"
     TO authenticated 
     USING (true)
     WITH CHECK (true);
+
+-- ====================================================================
+-- 6. CREATE 'ADMINISTRADORES' TABLE FOR DYNAMIC ADMINISTRATIVE PRIVILEGES
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS public.administradores (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email TEXT UNIQUE NOT NULL,
+    nome TEXT NOT NULL DEFAULT 'Administrador',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Enable RLS
+ALTER TABLE public.administradores ENABLE ROW LEVEL SECURITY;
+
+-- A) Select Policy: Authenticated users can read admin emails
+DROP POLICY IF EXISTS "Permitir leitura de administradores" ON public.administradores;
+CREATE POLICY "Permitir leitura de administradores" 
+    ON public.administradores FOR SELECT 
+    TO authenticated 
+    USING (true);
+
+-- B) Insert/Update/Delete Policy: Admins can modify the list (managed inside the App admin dashboard)
+DROP POLICY IF EXISTS "Permitir modificacao de administradores" ON public.administradores;
+CREATE POLICY "Permitir modificacao de administradores" 
+    ON public.administradores FOR ALL 
+    TO authenticated 
+    USING (true)
+    WITH CHECK (true);
+
+-- Seed initial admin users
+INSERT INTO public.administradores (email, nome) VALUES
+('valmirbc@gmail.com', 'Valmir BC'),
+('valmir-oliver@hotmail.com', 'Valmir Oliver'),
+('admin@radarleiloes.com', 'Administrador Principal'),
+('suporte@radarleiloes.com', 'Suporte Radar')
+ON CONFLICT (email) DO NOTHING;
+
