@@ -160,11 +160,18 @@ export default function PainelPage() {
       else if (diasRestantes > 0) score += 5;
     }
 
-    // Preço baixo = mais acessível (até 30 pts)
-    const preco = getPrecoNumerico(lote.lance_atual);
-    if (preco <= 20000) score += 30;
-    else if (preco <= 50000) score += 20;
-    else if (preco <= 100000) score += 10;
+    // Preço conhecido e baixo = mais acessível (até 30 pts)
+    // Lotes "Sob consulta" (sem valor real) não recebem pontos e ficam por último
+    const temPrecoReal = lote.lance_atual !== null && lote.lance_atual !== undefined &&
+      lote.lance_atual.trim() !== "" && parseFloat(lote.lance_atual.replace(/[^0-9.-]/g, "")) > 0;
+    if (temPrecoReal) {
+      const preco = getPrecoNumerico(lote.lance_atual);
+      if (preco <= 20000) score += 30;
+      else if (preco <= 50000) score += 20;
+      else if (preco <= 100000) score += 10;
+    } else {
+      score -= 100; // penaliza "Sob consulta" para empurrar ao final
+    }
 
     // Tem imagem = dado mais completo (10 pts)
     if (lote.imagem) score += 10;
