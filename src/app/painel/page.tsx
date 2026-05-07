@@ -51,16 +51,25 @@ export default function PainelPage() {
       } else {
         setEmail(data.session.user.email ?? "");
         setVerificando(false);
-        // Busca lotes do banco
-        supabase
-          .from("lotes")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(100)
-          .then(({ data: rows }) => {
-            setLotes((rows as Lote[]) ?? []);
-            setCarregandoLotes(false);
-          });
+        // Busca todos os lotes do banco em páginas de 1000
+        (async () => {
+          const PAGE = 1000;
+          let todos: Lote[] = [];
+          let from = 0;
+          while (true) {
+            const { data: rows } = await supabase
+              .from("lotes")
+              .select("*")
+              .order("created_at", { ascending: false })
+              .range(from, from + PAGE - 1);
+            if (!rows || rows.length === 0) break;
+            todos = todos.concat(rows as Lote[]);
+            if (rows.length < PAGE) break;
+            from += PAGE;
+          }
+          setLotes(todos);
+          setCarregandoLotes(false);
+        })();
       }
     });
   }, [router]);
