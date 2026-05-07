@@ -547,7 +547,26 @@ export default function PainelPage() {
           {/* grid de cards */}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {carregandoLotes ? (
-              <div className="col-span-3 py-20 text-center text-[#666666]">Carregando lotes...</div>
+              <div className="col-span-3 flex flex-col items-center justify-center py-24 gap-6 select-none">
+                {/* Ícone animado */}
+                <div className="relative flex items-center justify-center">
+                  <span className="absolute inline-flex h-20 w-20 rounded-full bg-[#6B21E8]/10 animate-ping" />
+                  <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-[#6B21E8]/10">
+                    <svg className="h-7 w-7 text-[#6B21E8] animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                    </svg>
+                  </span>
+                </div>
+                {/* Texto principal */}
+                <div className="text-center space-y-1">
+                  <p className="text-lg font-black text-gray-900 tracking-tight">Buscando as Melhores Oportunidades</p>
+                  <p className="text-sm text-gray-400 font-medium">Rastreando leilões em tempo real&hellip;</p>
+                </div>
+                {/* Barra de progresso */}
+                <div className="w-52 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                  <div className="h-full bg-[#6B21E8] rounded-full animate-[loading-bar_1.6s_ease-in-out_infinite]" style={{width:'60%'}} />
+                </div>
+              </div>
             ) : resultados.map((item) => (
               <article 
                 key={item.id} 
@@ -729,7 +748,7 @@ export default function PainelPage() {
             ))}
           </div>
 
-          {resultados.length === 0 && (
+          {resultados.length === 0 && !carregandoLotes && (
             <div className="mt-20 text-center text-[#666666]">
               <p className="text-2xl font-extrabold">Nenhum resultado</p>
               <p className="mt-2 text-sm">Tente ajustar os filtros ou a busca.</p>
