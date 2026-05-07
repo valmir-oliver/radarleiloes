@@ -4,7 +4,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import { createClient } from "@/lib/supabase";
-import { isAdminUser } from "@/lib/admin";
+
+const ADMIN_EMAILS = [
+  "valmirbc@gmail.com",
+  "valmir-oliver@hotmail.com",
+  "admin@radarleiloes.com",
+  "suporte@radarleiloes.com",
+];
 
 type Lote = {
   id: string;
@@ -78,15 +84,30 @@ export default function PainelPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data, error }) => {
-      if (error || !data.user) {
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) {
         router.replace("/entrar");
       } else {
-        setEmail(data.user.email ?? "");
-        setUsuarioAdmin(isAdminUser(data.user));
+        const userEmail = data.session.user.email ?? "";
+        setEmail(userEmail);
         setVerificando(false);
         // Busca todos os lotes do banco em páginas de 1000
         (async () => {
+          // Verifica se o usuário é admin via tabela + lista nativa
+          const { data: dbAdmins } = await supabase
+            .from("administradores")
+            .select("email");
+          const dynamicEmails = dbAdmins
+            ? dbAdmins.map((a: any) => a.email.toLowerCase().trim())
+            : [];
+          const lower = userEmail.toLowerCase().trim();
+          setUsuarioAdmin(
+            ADMIN_EMAILS.includes(lower) ||
+            lower.endsWith("@radarleiloes.com.br") ||
+            lower.endsWith("@radarleiloes.com") ||
+            dynamicEmails.includes(lower)
+          );
+
           const PAGE = 1000;
           let todos: Lote[] = [];
           let from = 0;
@@ -108,7 +129,7 @@ export default function PainelPage() {
           const { data: sols } = await supabase
             .from("solicitacoes_analise")
             .select("*")
-            .eq("solicitante_email", data.user.email);
+            .eq("solicitante_email", userEmail);
           if (sols) {
             setUserSolicitacoes(sols);
           }

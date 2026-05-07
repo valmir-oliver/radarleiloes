@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
-import { ADMIN_EMAILS, isAdminUser, isNativeAdminEmail, normalizeEmail } from "@/lib/admin";
+import { ADMIN_EMAILS } from "@/lib/admin";
 import Logo from "@/components/Logo";
 
 // Interface para solicitações
@@ -84,19 +84,6 @@ export default function AreaAdministrativa() {
     created_at?: string;
   }
   const [usuariosDoBanco, setUsuariosDoBanco] = useState<RegisteredUser[]>([]);
-
-  const getAuthHeaders = async (): Promise<Record<string, string>> => {
-    const supabase = createClient();
-    const { data } = await supabase.auth.getSession();
-    const accessToken = data.session?.access_token;
-    const headers: Record<string, string> = {};
-
-    if (accessToken) {
-      headers.Authorization = `Bearer ${accessToken}`;
-    }
-
-    return headers;
-  };
 
   const carregarDadosReais = async () => {
     try {
@@ -259,21 +246,44 @@ export default function AreaAdministrativa() {
     }
   };
 
-  // Verificar Auth e carregar administradores dinâmicos do Auth
+  // Verificar Auth e carregar administradores dinâmicos do banco
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(async ({ data, error }) => {
-      if (error || !data.user) {
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (!data.session) {
         router.push("/entrar");
       } else {
-        const userEmail = data.user.email;
+        const userEmail = data.session.user.email;
 
-        if (!isAdminUser(data.user)) {
+        const { data: dbAdmins } = await supabase
+          .from("administradores")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        const dynamicEmails = dbAdmins
+          ? dbAdmins.map((item: any) => item.email.toLowerCase().trim())
+          : [];
+
+        const isUserAuthorized = (emailToCheck: string | null | undefined): boolean => {
+          if (!emailToCheck) return false;
+          const lower = emailToCheck.toLowerCase().trim();
+          return (
+            ADMIN_EMAILS.includes(lower) ||
+            lower.endsWith("@radarleiloes.com.br") ||
+            lower.endsWith("@radarleiloes.com") ||
+            dynamicEmails.includes(lower)
+          );
+        };
+
+        if (!isUserAuthorized(userEmail)) {
           alert("Acesso Negado: Esta área é restrita aos administradores.");
           router.push("/painel");
         } else {
           setSessionUser(userEmail ?? "Administrador");
-          await carregarAdmins();
+          if (dbAdmins) {
+            setAdminsRaw(dbAdmins);
+            setAdminEmails(dynamicEmails);
+          }
           await carregarDadosReais();
           setVerificando(false);
         }
@@ -282,28 +292,19 @@ export default function AreaAdministrativa() {
   }, [router]);
 
   const carregarAdmins = async () => {
-    const headers = await getAuthHeaders();
-    const response = await fetch("/api/admins", {
-      headers,
-      cache: "no-store",
-    });
-    const payload = await response.json();
-
-    if (!response.ok) {
-      console.error("Erro ao carregar administradores:", payload?.error);
-      setAdminsRaw([]);
-      setAdminEmails([]);
-      return [];
+    const supabase = createClient();
+    const { data: dbAdmins } = await supabase
+      .from("administradores")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (dbAdmins) {
+      setAdminsRaw(dbAdmins);
+      setAdminEmails(dbAdmins.map((item: any) => item.email.toLowerCase().trim()));
     }
-
-    const dbAdmins = Array.isArray(payload?.admins) ? payload.admins : [];
-    setAdminsRaw(dbAdmins);
-    setAdminEmails(dbAdmins.map((item: any) => normalizeEmail(item.email)));
-    return dbAdmins;
   };
 
   const autorizarAdmin = async (nome: string, email: string) => {
-    const emailLower = normalizeEmail(email);
+    const emailLower = email.toLowerCase().trim();
     const nomeNormalizado = nome.trim() || "Administrador";
 
     if (!emailLower) {
@@ -316,23 +317,14 @@ export default function AreaAdministrativa() {
       return false;
     }
 
-    const headers = await getAuthHeaders();
-    const response = await fetch("/api/admins", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...headers,
-      },
-      body: JSON.stringify({
-        email: emailLower,
-        nome: nomeNormalizado,
-      }),
-    });
-    const payload = await response.json();
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("administradores")
+      .upsert({ email: emailLower, nome: nomeNormalizado }, { onConflict: "email" });
 
-    if (!response.ok) {
-      console.error("Erro ao adicionar administrador:", payload?.error);
-      alert("Erro ao adicionar privilégio: " + (payload?.error || "Falha desconhecida"));
+    if (error) {
+      console.error("Erro ao adicionar administrador:", error);
+      alert("Erro ao adicionar privilégio: " + error.message);
       return false;
     }
 
@@ -359,13 +351,13 @@ export default function AreaAdministrativa() {
   };
 
   const handleRevogarAdmin = async (id: string, emailRevogar: string) => {
-    const emailLower = normalizeEmail(emailRevogar);
-    if (isNativeAdminEmail(emailLower)) {
+    const emailLower = emailRevogar.toLowerCase().trim();
+    if (ADMIN_EMAILS.includes(emailLower)) {
       alert("Não é permitido revogar os administradores do sistema nativo padrão.");
       return;
     }
 
-    if (sessionUser && normalizeEmail(sessionUser) === emailLower) {
+    if (sessionUser && sessionUser.toLowerCase().trim() === emailLower) {
       alert("Você não pode revogar o seu próprio acesso enquanto está logado!");
       return;
     }
@@ -374,20 +366,15 @@ export default function AreaAdministrativa() {
       return;
     }
 
-    const headers = await getAuthHeaders();
-    const response = await fetch("/api/admins", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        ...headers,
-      },
-      body: JSON.stringify({ email: emailLower, id }),
-    });
-    const payload = await response.json();
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("administradores")
+      .delete()
+      .eq("id", id);
 
-    if (!response.ok) {
-      console.error("Erro ao revogar administrador:", payload?.error);
-      alert("Erro ao revogar privilégio: " + (payload?.error || "Falha desconhecida"));
+    if (error) {
+      console.error("Erro ao revogar administrador:", error);
+      alert("Erro ao revogar privilégio: " + error.message);
     } else {
       alert("Acesso administrativo revogado com sucesso.");
       await carregarAdmins();
