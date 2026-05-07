@@ -1,5 +1,14 @@
 ﻿@import "tailwindcss";
 
+/* Scrollbar hide utility for mobile nav bars */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @keyframes loading-bar {
   0%   { transform: translateX(-100%); width: 60%; }
   50%  { transform: translateX(80%);  width: 60%; }

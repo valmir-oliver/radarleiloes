@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+﻿import type { Metadata, Viewport } from "next";
 import { Bebas_Neue, Manrope } from "next/font/google";
 import "./globals.css";
 
@@ -14,12 +14,27 @@ const bodyFont = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Radar de Leiloes | Busca de Veiculos",
+  title: "Radar de Leilões | Busca de Veículos",
   description:
-    "Encontre oportunidades em varios leiloes de veiculos em um unico painel de busca.",
+    "Encontre oportunidades em vários leilões de veículos em um único painel de busca.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "RadarLeilões",
+  },
   icons: {
     icon: "/icon.svg",
+    apple: "/icons/icon-192.png",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#6B21E8",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -29,6 +44,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
